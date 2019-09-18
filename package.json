@@ -1,7 +1,7 @@
 {
   "name": "ip3x-bot",
-  "version": "1.0.0",
-  "description": "",
+  "version": "0.1.0",
+  "description": "Assistance Bot for the ELite: Dangerous Squadron IP3X",
   "main": "index.js",
   "scripts": {
     "start": "npm run build:live",
@@ -29,11 +29,11 @@
     "ts-node": "^8.4.1"
   },
   "nodemonConfig": {
-    "verbose": true,
+    "verbose": false,
     "ignore": [
       "test/*",
       "docs/*"
     ],
-    "delay": "250"
+    "delay": "1000"
   }
 }
