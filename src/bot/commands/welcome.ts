@@ -1,11 +1,10 @@
 /* eslint-disable no-unused-vars */
-import * as Discord   from "discord.js";
-import { RichEmbed }  from "discord.js";
-import { DiscordClient } from "../..";
+import * as Discord from "discord.js";
+import { RichEmbed } from "discord.js";
 
-exports.run =  (client: DiscordClient, message: Discord.Message, args: any): void => {
+exports.run = (client: Discord.Client, message: Discord.Message, args: any): void => {
   if (!message.content.startsWith("!welcome")) return;
- 
+
   const mention = message.mentions.members.first();
 
   // We can create embeds using the MessageEmbed constructor
@@ -43,18 +42,3 @@ exports.run =  (client: DiscordClient, message: Discord.Message, args: any): voi
   // Send the embed to the same channel as the message
   message.channel.send(embed);
 };
-/*
-
-
-
-
-
-
-
-
-
-
-
-
-
-*/

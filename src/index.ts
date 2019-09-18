@@ -1,5 +1,8 @@
-import * as discord from 'discord.js';
-import Enmap from 'enmap';
+import * as Discord from 'discord.js';
+
+import { Bot } from "./bot/bot";
+import config from './config.json';
+import winston from 'winston';
 
 export interface BotConfig {
     token: string;
@@ -7,21 +10,21 @@ export interface BotConfig {
 }
 
 export interface BotCommand {
-    process(msg: string, answer: discord.Message): Promise<void>;
+    process(msg: string, answer: Discord.Message): Promise<void>;
+}
+
+export interface Client extends Discord.Client {
+    bot: Bot;
+    logger: winston.Logger;
+}
+
+export interface HelpField {
+    name: string;
+    value: string;
+    inline?: boolean;
 }
 
 
-export interface DiscordClient extends discord.Client {
-    config: BotConfig;
-    commands: Enmap;
-}
-
-
-
-
-import { Bot } from "./bot/bot";
-import prodData from './config.json';
-const config = prodData;
 
 new Bot(config).start();
 

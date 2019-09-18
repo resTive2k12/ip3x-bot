@@ -1,17 +1,18 @@
-import * as discord from 'discord.js';
-import { DiscordClient } from '../..';
+import * as Discord from 'discord.js';
+import { Bot } from '../bot';
+import { Client } from '../..';
 
 
 
-module.exports = (client: DiscordClient, message: discord.Message): void => {
+module.exports = (client: Client, message: Discord.Message): void => {
     // Ignore all bots
     if (message.author.bot) return;
 
     // Ignore messages not starting with the prefix (in config.json)
-    if (message.content.indexOf(client.config.prefix) !== 0) return;
+    if (message.content.indexOf(client.bot.config.prefix) !== 0) return;
 
     // Our standard argument/command name definition.
-    const args = message.content.slice(client.config.prefix.length).trim().split(/ +/g) || [];
+    const args = message.content.slice(client.bot.config.prefix.length).trim().split(/ +/g) || [];
     if (!args || args.length <= 0) {
         return;
     }
@@ -23,14 +24,14 @@ module.exports = (client: DiscordClient, message: discord.Message): void => {
         return;
     }
 
-    console.log(command, client.commands);
+    console.log(command, client.bot.commands);
 
     // Grab the command data from the client.commands Enmap
-    const cmd = client.commands.get(command);
+    const cmd = client.bot.commands.get(command);
 
     // If that command doesn't exist, silently exit and do nothing
     if (!cmd) return;
 
     // Run the command
-    cmd.run(client, message, args);
+    cmd.run(client, message, client.bot, args);
 };
