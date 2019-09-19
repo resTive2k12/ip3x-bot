@@ -7,19 +7,20 @@ exports.run = (client: Discord.Client, message: Discord.Message, args: any): voi
 
   const mention = message.mentions.members.first();
 
+
   // We can create embeds using the MessageEmbed constructor
   // Read more about all that you can do with the constructor
   // over at https://discord.js.org/#/docs/main/stable/class/RichEmbed
   const embed = new RichEmbed()
     // Set the title of the field
     .setTitle("Welcome to the ED Squadron *INTERPLANETARY 3XPEDITIONS*")
-    .attachFiles(["./images/logo.png"])
-    .setThumbnail("attachment://logo.png")
+    .attachFiles(["./images/logo-90-90.png"])
+    .setThumbnail("attachment://logo-90-90.png")
     // Set the color of the embed
     .setColor(0xff0000)
     // Set the main content of the embed
     .setDescription(
-      `Greetings ${mention}, be welcomed to our discord channel!\nThis is an automated message. Please consider following the steps if not done already.`
+      `Greetings ${mention ? mention : 'Commander'}, be welcomed to our discord channel!\nThis is an automated message. Please consider following the steps if not done already.`
     )
     .addField(
       "1️⃣: JOIN OUR IN-GAME SQUADRON:",
