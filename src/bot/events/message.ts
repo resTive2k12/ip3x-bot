@@ -1,5 +1,4 @@
 import * as Discord from 'discord.js';
-import { Bot } from '../bot';
 import { Client } from '../..';
 
 
