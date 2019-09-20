@@ -3,3 +3,5 @@ data
 datastore
 build
 config.jsonpackage-lock.json
+**/*.log
+src/config.json
