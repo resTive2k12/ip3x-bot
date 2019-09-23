@@ -1,6 +1,6 @@
 import * as Discord from "discord.js";
 import { HelpField, Client } from "../..";
-import { exitOnError } from "winston";
+
 
 function setWelcomeChannel(db: Nedb, message: Discord.Message, client: Client): void {
   db.findOne({ "guild-id": message.guild.id }, (err, doc) => {
@@ -37,6 +37,21 @@ function setWelcomeChannel(db: Nedb, message: Discord.Message, client: Client): 
   });
 }
 
+function unsetWelcomeChannel(db: Nedb, message: Discord.Message, client: Client): void {
+  db.findOne({ "guild-id": message.guild.id }, (err, doc) => {
+    if (err) {
+      client.bot.logger.error("error finding guild config", err);
+      return;
+    }
+    if (!doc) {
+      return;
+    }
+    doc["welcome-channel"] = undefined;
+    db.update({ _id: doc._id }, doc);
+    db.persistence.compactDatafile();
+  });
+}
+
 exports.run = (client: Client, message: Discord.Message, args: string[]): void => {
   if (message.content.indexOf(client.bot.config.prefix + "admin") < 0) {
     console.info(`skipping admin command: ${message.content}`);
@@ -56,9 +71,8 @@ exports.run = (client: Client, message: Discord.Message, args: string[]): void =
   }
 
   const allowedRoles = [];
-  allowedRoles.push(message.guild.roles.find("name", "Admin"));
-  allowedRoles.push(message.guild.roles.find("name", "admin"));
-  allowedRoles.push(message.guild.roles.find("name", "IP3X Admiralty"));
+  allowedRoles.push(message.guild.roles.find(role => role.name.toLowerCase() === "admin"));
+  allowedRoles.push(message.guild.roles.find(role => role.name === "IP3X Admiralty"));
 
   let hasAdminRole = false;
 
@@ -76,7 +90,7 @@ exports.run = (client: Client, message: Discord.Message, args: string[]): void =
   if (args.find(arg => arg === "set-welcome-channel")) {
     setWelcomeChannel(db, message, client);
   } else if (args.find(arg => arg === "unset-welcome-channel")) {
-    setWelcomeChannel(db, message, client);
+    unsetWelcomeChannel(db, message, client);
   }
 };
 
