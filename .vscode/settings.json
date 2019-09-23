@@ -15,5 +15,6 @@
             "language": "typescript",
             "autoFix": true
         }
-    ]
+    ],
+    "prettier.printWidth": 256
 }
