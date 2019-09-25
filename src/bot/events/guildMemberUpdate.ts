@@ -1,5 +1,5 @@
 import * as Discord from "discord.js";
-import { Client } from "../..";
+import { Client } from "../api/client";
 
 module.exports = (client: Client, oldMember: Discord.GuildMember, newMember: Discord.GuildMember): void => {
   const wasInIP3X = !!oldMember.roles.filter(role => role.name === "IP3X").first();

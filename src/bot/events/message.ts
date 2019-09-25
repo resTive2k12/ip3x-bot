@@ -1,50 +1,38 @@
 import * as Discord from "discord.js";
-import { Client } from "../..";
+import { Client } from "../api/client";
+import { Command } from "../api/command";
+
+
+function parseMessageIntoParameters(message: Discord.Message): string[] {
+    const regex1 = new RegExp(/("[^"\\]*(?:\\[\S\s][^"\\]*)*"|'[^'\\]*(?:\\[\S\s][^'\\]*)*'|\/[^\/\\]*(?:\\[\S\s][^\/\\]*)*\/[gimy]*(?=\s|$)|(?:\\\s|\S)+)/g);
+    const args = [];
+    let m;
+    do {
+        m = regex1.exec(message.content.trim());
+        if (m) {
+            args.push(m[0] as string);
+        }
+    } while (m);
+    return args;
+}
 
 module.exports = (client: Client, message: Discord.Message): void => {
     // Ignore all bots
     if (message.author.bot) return;
 
-    // Ignore messages not starting with bot mention or the prefix (in config.json)
-    if (!message.isMentioned(client.users.filter(user => user.id === client.user.id).first()) && message.content.indexOf(client.bot.config.prefix) < 0) {
-        return;
-    }
-
-    // Our standard argument/command name definition.
-    const args = message.content.trim().split(/ +/g) || [];
-
-    console.log("message-event:", args);
+    //parsing the arguments of the message.
+    const args = parseMessageIntoParameters(message);
 
     if (!args || args.length <= 0) {
         return;
     }
 
-    let command = "";
-
-    args.forEach(argument => {
-        if (argument.startsWith(client.bot.config.prefix)) {
-            command = argument.slice(client.bot.config.prefix.length);
+    client.bot.commands.forEach((v, k) => {
+        const commandClass = v[k] as Command;
+        if (commandClass && commandClass.matches && commandClass.matches(client.bot.config, args)) {
+            const instance = Object.create(commandClass.prototype as object) as Command;
+            instance.constructor.apply(instance, ...[client.bot]);
+            instance.run(client, message, args);
         }
     });
-
-    if (command) {
-        command = command.toLowerCase();
-    } else {
-        return;
-    }
-
-    // Grab the command data from the client.commands Enmap
-    const cmd = client.bot.commands.get(command);
-
-    // If that command doesn't exist, silently exit and do nothing
-
-    if (!cmd) {
-        client.bot.logger.error(`Command <${command} ${typeof cmd}> not found...`);
-        return;
-    } else {
-        client.bot.logger.debug(`Command <${command} ${typeof cmd}> found...`);
-    }
-
-    // Run the command
-    cmd.run(client, message, args);
 };

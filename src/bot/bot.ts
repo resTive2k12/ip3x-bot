@@ -1,9 +1,10 @@
 import * as discord from "discord.js";
 import * as fs from "fs";
 import Enmap from "enmap";
-import { BotConfig, Client } from "..";
+import { BotConfig } from "..";
 import * as Winston from "winston";
 import Datastore from "nedb";
+import { Client } from "./api/client";
 
 export class Bot {
   private botId: string | null = null;
@@ -72,7 +73,7 @@ export class Bot {
       if (err) return console.error(err);
       files.forEach(async file => {
         if (!file.endsWith(".js") && !file.endsWith(".ts")) return;
-        const props = await import(`./commands/${file}`);
+        const props = await import(`./commands/${file}`) as "Command";
         const commandName = file.split(".")[0];
         this.logger.debug(`Attempting to load command ${commandName}`);
         this.commands.set(commandName, props);

@@ -1,5 +1,6 @@
 import * as Discord from "discord.js";
-import { HelpField, Client } from "../..";
+import { HelpField } from "../..";
+import { Client } from "../api/client";
 
 
 function setWelcomeChannel(db: Nedb, message: Discord.Message, client: Client): void {

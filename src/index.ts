@@ -14,10 +14,7 @@ export interface BotCommand {
   process(msg: string, answer: Discord.Message): Promise<void>;
 }
 
-export interface Client extends Discord.Client {
-  bot: Bot;
-  logger: winston.Logger;
-}
+
 
 export interface HelpField {
   name: string;
