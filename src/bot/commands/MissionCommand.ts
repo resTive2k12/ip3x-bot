@@ -44,7 +44,7 @@ export class MissionCommand implements Command {
                 .setColor(0x00FF00)
                 // Set the main content of the embed
                 .setDescription(`Some description`)
-                .setTimestamp(Date.now() - 1000 * 60 * 60 * 24 * 3);
+                .setTimestamp(Date.now());
 
 
             const missionPrios = ["primary", ":one:",
