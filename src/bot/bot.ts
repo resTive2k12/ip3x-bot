@@ -1,10 +1,11 @@
 import * as discord from "discord.js";
 import * as fs from "fs";
 import Enmap from "enmap";
-import { BotConfig } from "..";
+
 import * as Winston from "winston";
-import Datastore from "nedb";
+
 import { Client } from "./api/client";
+import { BotConfig } from "./api/bot";
 
 export class Bot {
   private botId: string | null = null;
@@ -23,6 +24,7 @@ export class Bot {
     this.commands = new Enmap();
     this.events = new Enmap();
 
+
     this.logger = Winston.createLogger({
       level: "debug",
       format: Winston.format.combine(
@@ -32,11 +34,6 @@ export class Bot {
         })
       ),
       transports: [new Winston.transports.Console(), new Winston.transports.File({ filename: "combined.log" })]
-    });
-
-    this.config.db = new Datastore({
-      filename: "datastore/config.store",
-      autoload: true
     });
   }
 

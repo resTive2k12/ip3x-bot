@@ -1,6 +1,7 @@
 import { Client } from "./client";
 import * as Discord from "discord.js";
-import { BotConfig, HelpField } from "../..";
+import { HelpField } from "../..";
+import { BotConfig } from "./bot";
 
 export interface Command {
 

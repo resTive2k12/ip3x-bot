@@ -2,7 +2,8 @@ import { Command } from "../api/command";
 import { Client } from "../api/client";
 import * as Discord from "discord.js";
 import { Bot } from "../bot";
-import { BotConfig, HelpField } from "../..";
+import { HelpField } from "../..";
+import { BotConfig } from "../api/bot";
 
 export class HelpCommand implements Command {
     private bot: Bot;
@@ -12,12 +13,16 @@ export class HelpCommand implements Command {
     }
 
     static matches(config: BotConfig, args: string[]): boolean {
-        const cmd = args.shift();
+        if (!args || args.length == 0) {
+            return false;
+        }
+        const cmd = args[0];
         return !!cmd && cmd.startsWith(config.prefix + "help");
     };
 
     run(client: Client, message: Discord.Message, args: string[]): void {
-        const embed = new Discord.RichEmbed().setTitle("Known commands");
+        const embed = new Discord.RichEmbed();
+        embed.setDescription("A list of currently available commands");
         embed.setAuthor('Automated IP3X assistant', "attachment://charity.png", "https://inara.cz/squadron/6172/");
         embed.attachFiles(["./images/charity.png", "./images/logo-detailed.png"]);
         embed.setThumbnail("attachment://logo-detailed.png");
@@ -34,7 +39,8 @@ export class HelpCommand implements Command {
                 }
             }
         });
-        message.channel.send(embed);
+        message.author.send(embed);
+        message.channel.send(`${message.author} I have sent you a direct message.`);
     }
 
     help(): HelpField {

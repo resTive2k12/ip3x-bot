@@ -27,11 +27,14 @@ module.exports = (client: Client, message: Discord.Message): void => {
         return;
     }
 
+    console.log("Parsed message: ", args);
+
     client.bot.commands.forEach((v, k) => {
         const commandClass = v[k] as Command;
+
         if (commandClass && commandClass.matches && commandClass.matches(client.bot.config, args)) {
             const instance = Object.create(commandClass.prototype as object) as Command;
-            instance.constructor.apply(instance, ...[client.bot]);
+            instance.constructor.apply(instance, [client.bot]);
             instance.run(client, message, args);
         }
     });

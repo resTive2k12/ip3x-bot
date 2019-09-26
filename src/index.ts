@@ -1,20 +1,14 @@
 import * as Discord from "discord.js";
-
 import { Bot } from "./bot/bot";
 import config from "./config.json";
 import winston from "winston";
+import Datastore from "nedb";
+import { BotConfig } from "./bot/api/bot";
 
-export interface BotConfig {
-  db?: Nedb<any>;
-  token: string;
-  prefix: string;
-}
 
 export interface BotCommand {
   process(msg: string, answer: Discord.Message): Promise<void>;
 }
-
-
 
 export interface HelpField {
   name: string;
@@ -22,4 +16,14 @@ export interface HelpField {
   inline?: boolean;
 }
 
-new Bot(config).start();
+const botConfig: BotConfig = {
+  "db": new Datastore({
+    filename: "datastore/config.store",
+    autoload: true
+  }),
+  "token": config.token,
+  "prefix": config.prefix
+};
+
+
+new Bot(botConfig).start();
