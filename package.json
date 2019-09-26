@@ -5,12 +5,14 @@
   "main": "index.js",
   "scripts": {
     "start": "npm run build:live",
-    "build": "rm -rf build/ && tsc -p .",
+    "clean": "rm -rf build/",
+    "build": "rm -rf build/ && tsc -p . && cpx images/**/*.* build/images",
     "build:live": "nodemon --watch src -e ts,tsx --exec \"npx ts-node src/index.ts\""
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "cpx": "^1.5.0",
     "discord.js": "^11.5.1",
     "enmap": "^5.1.2",
     "fs": "0.0.1-security",
