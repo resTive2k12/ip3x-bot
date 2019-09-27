@@ -1,50 +1,52 @@
 import { Command } from "../api/command";
 import { Client } from "../api/client";
 import * as Discord from "discord.js";
-import { Bot } from "../bot";
 import { HelpField } from "../..";
-import { BotConfig } from "../api/bot";
+import { AbstractCommand } from "./AbstractCommand";
 
-export class HelpCommand implements Command {
-    private bot: Bot;
+export class HelpCommand extends AbstractCommand {
 
-    constructor(bot: Bot) {
-        this.bot = bot;
+    public command = "help";
+    public aliases: string[] = [];
+    public botMentionMandatory = true;
+
+    constructor(client: Client) {
+        super(client);
     }
 
-    static matches(config: BotConfig, args: string[]): boolean {
-        if (!args || args.length == 0) {
-            return false;
-        }
-        const cmd = args[0];
-        return !!cmd && cmd.startsWith(config.prefix + "help");
-    };
+    run(message: Discord.Message, args: string[]): void {
 
-    run(client: Client, message: Discord.Message, args: string[]): void {
         const embed = new Discord.RichEmbed();
-        embed.setDescription("A list of currently available commands");
+
+        if (args[2]) {
+            const prefix = this.client.bot.config.prefix;
+            const result = this.client.bot.commands.find(command => command.command.toLowerCase() === args[2] || !!command.aliases.find(alias => args[2] === prefix + alias));
+            if (result) {
+                embed.setDescription(`Detailed instructions for the "_${args[2]}_" command.`);
+                const helpFields = result.help();
+                helpFields.forEach(field => {
+                    embed.addField(field.name, field.value, field.inline);
+                });
+            }
+        } else {
+            embed.setDescription("A list of currently available commands.\nUse `@IP3X Assistant !help <command name>` for more detailed information.\n__You use the help command in this direct message.__");
+            embed.addField("known commands", this.client.bot.commands.map(command => command.command).join(','));
+        }
+
+
         embed.setAuthor('Automated IP3X assistant', "attachment://charity.png", "https://inara.cz/squadron/6172/");
         embed.attachFiles(["./images/charity.png", "./images/logo-detailed.png"]);
         embed.setThumbnail("attachment://logo-detailed.png");
-        client.bot.commands.forEach((v, k) => {
-            const commandClass = v[k] as Command;
-            if (commandClass && commandClass.matches) {
-                const instance = Object.create(commandClass.prototype as object) as Command;
-                instance.constructor.apply(instance, ...[client.bot]);
-                const help = instance.help();
-                if (!help) {
-                    embed.addField(k, "No help provided yet.");
-                } else {
-                    embed.addField(help.name, help.value, help.inline);
-                }
-            }
-        });
+
+
         message.author.send(embed);
-        message.channel.send(`${message.author} I have sent you a direct message.`);
+        if (message.channel.type !== 'dm') {
+            message.channel.send(`${message.author} I have sent you a direct message.`);
+        }
     }
 
-    help(): HelpField {
-        return { name: "!help", value: "The list of all commands you are watching right now!" };
+    help(): HelpField[] {
+        return [{ name: "!help", value: "Just a list of all commands. Use @IP3X Assistant !help <command name> for more detailed information." }];
     }
 
 }

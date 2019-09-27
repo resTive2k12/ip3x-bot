@@ -1,31 +1,22 @@
-import { Command } from "../api/command";
-import { Bot } from "../bot";
-import { BotConfig } from "../api/bot";
 import { Client } from "../api/client";
 import * as Discord from "discord.js";
+import { AbstractCommand } from "./AbstractCommand";
 
-export class MissionCommand implements Command {
+export class MissionCommand extends AbstractCommand {
 
-    prototype?: object | null | undefined;
-    private bot: Bot;
+    public command = "mission";
+    public aliases: string[] = [];
 
-    constructor(bot: Bot) {
-        this.bot = bot;
+    constructor(client: Client) {
+        super(client);
     }
 
-    static matches(config: BotConfig, args: string[]): boolean {
-        if (!args || args.length == 0) {
-            return false;
+    run(message: Discord.Message, args?: string[] | undefined): void {
+        if (!message.guild) {
+            message.channel.send(`${message.author} Make sure, you are not sending this in a direct message.`);
+            return;
         }
-        const cmd = args[0];
-        return !!cmd && cmd.startsWith(config.prefix + "mission");
-    };
-
-    run(client: Client, message: Discord.Message, args?: string[] | undefined): void {
-        this.showMission(this.bot.config.db, message.guild.id, message);
-    }
-    help(): import("../..").HelpField {
-        return { name: "!mission", value: "Shows the current mission objectives." };
+        this.showMission(this.client.bot.config.db, message.guild.id, message);
     }
 
     showMission(db: Nedb<any>, guildId: string, message: Discord.Message): void {

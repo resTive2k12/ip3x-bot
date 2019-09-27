@@ -1,12 +1,21 @@
-import { Client } from "./client";
 import * as Discord from "discord.js";
 import { HelpField } from "../..";
-import { BotConfig } from "./bot";
+import { Client } from "./client";
 
 export interface Command {
+    prototype?: object;
 
-    run(client: Client, message: Discord.Message, args?: string[]): void;
-    help(): HelpField;
-    prototype?: object | null;
-    matches?(config: BotConfig, args: string[]): boolean;
+    command: string;
+    aliases: string[];
+    botMentionMandatory: boolean;
+
+
+    run(message: Discord.Message, args?: string[]): void;
+    help(): HelpField[];
+    matches(args: string[]): boolean;
 }
+
+export interface CommandBuilder {
+    new(client: Client): Command;
+}
+

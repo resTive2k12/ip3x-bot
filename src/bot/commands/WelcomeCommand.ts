@@ -1,25 +1,21 @@
-import { Command } from "../api/command";
-import { Bot } from "../bot";
-import { BotConfig } from "../api/bot";
 import { Client } from "../api/client";
 import * as Discord from "discord.js";
+import { AbstractCommand } from "./AbstractCommand";
+import { HelpField } from "../..";
 
-export class WelcomeCommand implements Command {
+export class WelcomeCommand extends AbstractCommand {
 
-    prototype?: object | null | undefined;
-    private bot: Bot;
+    public command = "welcome";
+    public aliases: string[] = [""];
+    public botMentionMandatory = false;
 
-    constructor(bot: Bot) {
-        this.bot = bot;
+
+    constructor(client: Client) {
+        super(client);
     }
 
-    static matches(config: BotConfig, args: string[]): boolean {
-        const cmd = args[0];
-        return !!cmd && cmd.startsWith(config.prefix + "welcome");
-    };
-
-    run(client: Client, message: Discord.Message, args?: string[] | undefined): void {
-        const db = this.bot.config.db;
+    run(message: Discord.Message, args?: string[] | undefined): void {
+        const db = this.client.bot.config.db;
 
         db.findOne({ "guild-id": message.guild.id }, (err: any, doc: any) => {
             if (err) {
@@ -35,7 +31,7 @@ export class WelcomeCommand implements Command {
 
             if (doc["welcome-channel"]) {
                 console.debug(`loading channel ${doc["welcome-channel"]}, ${doc}`);
-                targetChannel = client.channels.get(doc["welcome-channel"]) as Discord.TextChannel;
+                targetChannel = this.client.channels.get(doc["welcome-channel"]) as Discord.TextChannel;
             }
 
             if (!targetChannel) {
@@ -78,7 +74,9 @@ export class WelcomeCommand implements Command {
         });
 
     }
-    help(): import("../..").HelpField {
-        return { name: "!welcome [@mention]", value: "Shows the default welcome message to the optionally mentioned user." };
+
+    help(): HelpField[] {
+        return [{ name: "!welcome", value: "Displays a welcome message directed to new members of IP3X with detailed information where to login/register/connect.\n\nIt is _not_ needed to mention this bot for this command to function.", inline: false },];
     }
+
 }

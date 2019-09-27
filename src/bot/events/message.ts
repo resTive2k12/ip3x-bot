@@ -1,7 +1,5 @@
 import * as Discord from "discord.js";
 import { Client } from "../api/client";
-import { Command } from "../api/command";
-
 
 function parseMessageIntoParameters(message: Discord.Message): string[] {
     const regex1 = new RegExp(/("[^"\\]*(?:\\[\S\s][^"\\]*)*"|'[^'\\]*(?:\\[\S\s][^'\\]*)*'|\/[^\/\\]*(?:\\[\S\s][^\/\\]*)*\/[gimy]*(?=\s|$)|(?:\\\s|\S)+)/g);
@@ -17,6 +15,7 @@ function parseMessageIntoParameters(message: Discord.Message): string[] {
 }
 
 module.exports = (client: Client, message: Discord.Message): void => {
+
     // Ignore all bots
     if (message.author.bot) return;
 
@@ -28,14 +27,20 @@ module.exports = (client: Client, message: Discord.Message): void => {
     }
 
     console.log("Parsed message: ", args);
+    let commandExecuted: string | number = '';
 
-    client.bot.commands.forEach((v, k) => {
-        const commandClass = v[k] as Command;
-
-        if (commandClass && commandClass.matches && commandClass.matches(client.bot.config, args)) {
-            const instance = Object.create(commandClass.prototype as object) as Command;
-            instance.constructor.apply(instance, [client.bot]);
-            instance.run(client, message, args);
+    for (let i = 0; i < client.bot.commands.length; i++) {
+        const cmd = client.bot.commands[i];
+        if (cmd.matches(args)) {
+            cmd.run(message, args);
+            commandExecuted = cmd.command;
+            break;
         }
-    });
+    }
+
+    if (!commandExecuted) {
+        console.debug("No command matched input...");
+    } else {
+        console.debug("Last command executed:", commandExecuted);
+    }
 };
