@@ -52,7 +52,7 @@ export class WelcomeCommand extends AbstractCommand {
                 // Set the main content of the embed
                 .setDescription(`Greetings ${mention ? mention : "Commander"}, welcome to IP3X!\nThis is an automated message. Please take a moment to follow the steps below if you've not done so already.`)
                 .addField(
-                    "1️⃣: JOIN OUR IN-GAME SQUADRON:",
+                    ":one:: JOIN OUR IN-GAME SQUADRON:",
                     `- Tag: IP3X (PC)
   - In-game, the right panel contains Squadrons, search for IP3X and apply.
   `
@@ -64,8 +64,8 @@ export class WelcomeCommand extends AbstractCommand {
   - Please announce your presence in chat and be patient for an officer to respond, depending on the time of day.
   - The Elite channel for IP3X is private, an officer will need to grant you access.~~`
         )*/
-                .addField("3️⃣: JOIN OUR PRIVATE GROUP:", `- PC: Search for the Group "Evil Tactician", and/or ask an officer on Discord.`)
-                .addField("4️⃣: JOIN US ON INARA", `- Link: https://inara.cz/squadron/6172/`)
+                .addField(":two:: JOIN OUR PRIVATE GROUP:", `- PC: Search for the Group "Evil Tactician", and/or ask an officer on Discord.`)
+                .addField(":three:: JOIN US ON INARA", `- Link: https://inara.cz/squadron/6172/`)
                 .setTimestamp(new Date());
             // Send the embed to the same channel as the message
             targetChannel.send(embed);
