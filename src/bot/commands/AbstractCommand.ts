@@ -32,7 +32,7 @@ export abstract class AbstractCommand implements Command {
         }
 
         return cmd === prefix + this.command || !!this.aliases.find(alias => cmd === prefix + alias);
-    };
+    }
 
     run(message: Discord.Message, args?: string[] | undefined): void {
         //nothing to do here

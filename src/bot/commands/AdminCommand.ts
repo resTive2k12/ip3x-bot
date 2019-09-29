@@ -4,16 +4,13 @@ import { HelpField } from "../..";
 import { AbstractCommand } from "./AbstractCommand";
 
 export class AdminCommand extends AbstractCommand {
-
     public command = "config";
     public aliases: string[] = ["admin"];
     public botMentionMandatory = true;
 
-
     constructor(client: Client) {
         super(client);
     }
-
 
     run(message: Discord.Message, args: string[]): void {
         if (!this.isValid(message)) {
@@ -42,7 +39,6 @@ export class AdminCommand extends AbstractCommand {
         } else {
             message.channel.send("Could not find any configuration command. Try !help");
         }
-
     }
 
     isValid(message: Discord.Message): boolean {
@@ -130,13 +126,11 @@ export class AdminCommand extends AbstractCommand {
                 doc = { "guild-id": message.guild.id, "last-update": Date.now() };
                 db.insert(doc);
                 db.persistence.compactDatafile();
-            }
-            else {
+            } else {
                 doc.missions = undefined;
                 doc["last-updated"] = Date.now();
                 db.update({ _id: doc._id }, doc);
                 db.persistence.compactDatafile();
-
             }
             message.channel.send(`${message.member} mission objectives have been cleared.`);
         });
@@ -152,7 +146,9 @@ export class AdminCommand extends AbstractCommand {
                 doc = { "guild-id": message.guild.id, "last-update": Date.now() };
                 doc.missions = {};
                 doc.missions[type] = missiontext;
-                db.insert(doc, (err, inserteddoc) => { doc = inserteddoc; });
+                db.insert(doc, (err, inserteddoc) => {
+                    doc = inserteddoc;
+                });
                 db.persistence.compactDatafile();
             } else {
                 //console.log("updating current mission ", type, missiontext, doc);
@@ -176,7 +172,9 @@ export class AdminCommand extends AbstractCommand {
                 doc = { "guild-id": message.guild.id, "last-update": Date.now() };
                 doc.missions = {};
                 doc.missions["description"] = text;
-                db.insert(doc, (err, inserteddoc) => { doc = inserteddoc; });
+                db.insert(doc, (err, inserteddoc) => {
+                    doc = inserteddoc;
+                });
                 db.persistence.compactDatafile();
             } else {
                 //console.log("updating current mission ", type, missiontext, doc);
@@ -198,7 +196,7 @@ export class AdminCommand extends AbstractCommand {
             { name: "*mission-_(primary|secondary|tertiary)_", value: `Sets the mission text for the mission.` },
             { name: "mission-_(quaternary|quinary|senary)_", value: `Sets the mission text for the mission.` },
             { name: "mission-_(septenary|octonary|nonary|denary)_", value: `Sets the mission text for the mission.` },
-            { name: "mission-description", value: `A general description of the mission(s).` },
+            { name: "mission-description", value: `A general description of the mission(s).` }
         ];
     }
 }
