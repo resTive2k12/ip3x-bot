@@ -1,8 +1,6 @@
 import * as discord from "discord.js";
 import * as fs from "fs";
 import Enmap from "enmap";
-
-
 import { Client } from "./api/client";
 import { BotConfig } from "./api/bot";
 import { Command } from "./api/command";
@@ -25,9 +23,6 @@ export class Bot {
     this.discordClient.bot = this;
     this.commands = [];
     this.events = new Enmap();
-
-
-
   }
 
   start(): void {
