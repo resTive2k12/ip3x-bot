@@ -4,6 +4,4 @@ datastore
 build
 config.jsonpackage-lock.json
 **/*.log
-src/config.json
-src/config.dev.json
-ip3x-jwt.json
+config/**

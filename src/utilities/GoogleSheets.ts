@@ -6,7 +6,7 @@ export class GoogleSheets {
 
     public static async auth(): Promise<JWT> {
         const auth = new google.auth.GoogleAuth({
-            keyFile: "ip3x-jwt.json",
+            keyFile: "config/ip3x-jwt.json",
             scopes: GoogleSheets.SCOPES
         });
 

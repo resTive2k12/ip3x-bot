@@ -1,46 +1,51 @@
 {
-  "name": "ip3x-bot",
-  "version": "0.1.0",
-  "description": "Assistance Bot for the ELite: Dangerous Squadron IP3X",
-  "main": "index.js",
-  "scripts": {
-    "start": "npm run build:live",
-    "clean": "rm -rf build/",
-    "build": "rm -rf build/ && tsc -p . && cpx images/**/*.* build/images && docker build -t thorstenst/ip3x-bot .",
-    "build:live": "nodemon --watch src -e ts,tsx --exec \"npx ts-node src/index.ts\""
-  },
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "discord.js": "^11.5.1",
-    "enmap": "^5.1.2",
-    "fs": "0.0.1-security",
-    "googleapis": "^43.0.0",
-    "nedb": "^1.8.0",
-    "request": "^2.88.0",
-    "typescript": "^3.6.3",
-    "winston": "^3.2.1",
-    "zeromq": "^5.1.0",
-    "zlib": "^1.0.5"
-  },
-  "devDependencies": {
-    "@types/nedb": "^1.8.9",
-    "@types/node": "^12.7.7",
-    "@types/request": "^2.48.3",
-    "@typescript-eslint/eslint-plugin": "^2.3.1",
-    "@typescript-eslint/parser": "^2.3.1",
-    "cpx": "^1.5.0",
-    "eslint": "^6.4.0",
-    "nodemon": "^1.19.2",
-    "ts-node": "^8.4.1"
-  },
-  "types": "src/index.d.ts",
-  "nodemonConfig": {
-    "verbose": false,
-    "ignore": [
-      "test/*",
-      "docs/*"
-    ],
-    "delay": "1000"
-  }
+    "name": "ip3x-bot",
+    "version": "0.1.0",
+    "description": "Assistance Bot for the ELite: Dangerous Squadron IP3X",
+    "main": "index.js",
+    "scripts": {
+        "start": "npm run build:live",
+        "clean": "rm -rf build/",
+        "build": "rm -rf build/ && tsc -p . && cpx images/**/*.* build/images && docker build -t thorstenst/ip3x-bot .",
+        "build:live": "nodemon --watch src -e ts,tsx --exec \"npx ts-node src/index.ts\"",
+        "test": "mocha -r ts-node/register test/**/*.ts"
+    },
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "discord.js": "^11.5.1",
+        "enmap": "^5.1.2",
+        "fs": "0.0.1-security",
+        "googleapis": "^43.0.0",
+        "nedb": "^1.8.0",
+        "request": "^2.88.0",
+        "typescript": "^3.6.3",
+        "winston": "^3.2.1",
+        "zeromq": "^5.1.0",
+        "zlib": "^1.0.5"
+    },
+    "devDependencies": {
+        "@types/chai": "^4.2.3",
+        "@types/mocha": "^5.2.7",
+        "@types/nedb": "^1.8.9",
+        "@types/node": "^12.7.7",
+        "@types/request": "^2.48.3",
+        "@typescript-eslint/eslint-plugin": "^2.3.2",
+        "@typescript-eslint/parser": "^2.3.2",
+        "chai": "^4.2.0",
+        "cpx": "^1.5.0",
+        "eslint": "^6.5.0",
+        "mocha": "^6.2.1",
+        "nodemon": "^1.19.3",
+        "ts-node": "^8.4.1"
+    },
+    "types": "src/index.d.ts",
+    "nodemonConfig": {
+        "verbose": false,
+        "ignore": [
+            "test/*",
+            "docs/*"
+        ],
+        "delay": "1000"
+    }
 }

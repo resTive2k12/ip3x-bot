@@ -15,10 +15,8 @@ function parseMessageIntoParameters(message: Discord.Message): string[] {
 }
 
 module.exports = (client: Client, message: Discord.Message): void => {
-
     // Ignore all bots
-    if (message.author.bot && message.author.id != client.user.id) return;
-
+    if (message.author.bot) return;
 
     //parsing the arguments of the message.
     const args = parseMessageIntoParameters(message);
@@ -28,7 +26,7 @@ module.exports = (client: Client, message: Discord.Message): void => {
     }
 
     console.log("Parsed message: ", args);
-    let commandExecuted: string | number = '';
+    let commandExecuted: string | number = "";
 
     for (let i = 0; i < client.bot.commands.length; i++) {
         const cmd = client.bot.commands[i];
