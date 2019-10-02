@@ -1,7 +1,5 @@
 import Datastore from "nedb";
 import { GuildEntry } from "../bot/api/storage";
-import { resolve } from "url";
-import { rejects } from "assert";
 
 export class DB {
     private static instance: Datastore;
@@ -18,8 +16,9 @@ export class DB {
         });
     }
 
-    public static fetchGuildData(id: string): Promise<GuildEntry> {
+    public static fetch(id: string): Promise<GuildEntry> {
         return new Promise<GuildEntry>(function(resolve, reject): void {
+            if (!DB.instance) reject("Database instance not loaded...");
             DB.instance.findOne<GuildEntry>({ _id: id }, (err, document) => {
                 if (err) reject(err);
                 else resolve(document);
@@ -27,9 +26,10 @@ export class DB {
         });
     }
 
-    public static updateGuildData(entry: GuildEntry): Promise<GuildEntry> {
+    public static updateOrInsert(entry: GuildEntry): Promise<GuildEntry> {
         return new Promise<GuildEntry>((resolve, reject): void => {
-            DB.instance.update({ _id: entry._id }, entry, {}, (err, numRows, upsert) => {
+            if (!DB.instance) reject("Database instance not loaded...");
+            DB.instance.update({ _id: entry._id }, entry, { upsert: true }, (err, numRows, upsert) => {
                 if (err) reject(err);
                 else if (numRows < 1) reject(new Error("No data has been updated"));
                 else resolve(entry);
@@ -37,8 +37,20 @@ export class DB {
         });
     }
 
-    public static insertGuildData(entry: GuildEntry): Promise<GuildEntry> {
+    public static update(entry: GuildEntry): Promise<GuildEntry> {
         return new Promise<GuildEntry>((resolve, reject): void => {
+            if (!DB.instance) reject("Database instance not loaded...");
+            DB.instance.update({ _id: entry._id }, entry, {}, (err, numRows) => {
+                if (err) reject(err);
+                else if (numRows < 1) reject(new Error("No data has been updated"));
+                else resolve(entry);
+            });
+        });
+    }
+
+    public static insert(entry: GuildEntry): Promise<GuildEntry> {
+        return new Promise<GuildEntry>((resolve, reject): void => {
+            if (!DB.instance) reject("Database instance not loaded...");
             DB.instance.insert(entry, (err, newdoc) => {
                 if (err) reject(err);
                 else resolve(newdoc);
