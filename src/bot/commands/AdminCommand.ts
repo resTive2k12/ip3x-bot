@@ -2,7 +2,7 @@ import { Client } from "../api/client";
 import * as Discord from "discord.js";
 import { HelpField } from "../..";
 import { AbstractCommand } from "./AbstractCommand";
-import { GoogleSheets } from "../utilities/GoogleSheets";
+import { GoogleSheets } from "../../utilities/GoogleSheets";
 import { google } from "googleapis";
 
 export class AdminCommand extends AbstractCommand {
@@ -26,50 +26,41 @@ export class AdminCommand extends AbstractCommand {
         } else if (args.find(arg => arg === "mission-clear")) {
             this.clearMissions(this.client.bot.config.db, message);
         } else if (args.find(arg => arg === "mission-sync")) {
-            message.channel.send('Snychronizing mission objectives: authenticating', {}).then(message => {
+            message.channel.send("Snychronizing mission objectives: authenticating", {}).then(message => {
                 if (message instanceof Discord.Message) {
-                    GoogleSheets.auth().then(succ => {
-                        message.edit('Snychronizing mission objectives: authenticated');
-                        const request = {
-                            // The ID of the spreadsheet to retrieve data from.
-                            spreadsheetId: '1AS0CYbHhMTYO9ogqE8Pxn6N7DJBVPsiAJW05E-K5Uuw',  // TODO: Update placeholder value.
+                    GoogleSheets.auth().then(
+                        succ => {
+                            message.edit("Snychronizing mission objectives: authenticated");
+                            const request = {
+                                // The ID of the spreadsheet to retrieve data from.
+                                spreadsheetId: "1AS0CYbHhMTYO9ogqE8Pxn6N7DJBVPsiAJW05E-K5Uuw", // TODO: Update placeholder value.
 
-                            // The A1 notation of the values to retrieve.
-                            range: 'IP3X Assistant Config!A6:C18',  // TODO: Update placeholder value.
+                                // The A1 notation of the values to retrieve.
+                                range: "IP3X Assistant Config!A6:C18", // TODO: Update placeholder value.
 
-                            // How values should be represented in the output.
-                            // The default render option is ValueRenderOption.FORMATTED_VALUE.
-                            //valueRenderOption: '',  // TODO: Update placeholder value.
+                                auth: succ
+                            };
+                            const sheets = google.sheets("v4");
 
-                            // How dates, times, and durations should be represented in the output.
-                            // This is ignored if value_render_option is
-                            // FORMATTED_VALUE.
-                            // The default dateTime render option is [DateTimeRenderOption.SERIAL_NUMBER].
-                            //dateTimeRenderOption: '',  // TODO: Update placeholder value.
-
-                            auth: succ,
-                        };
-                        const sheets = google.sheets('v4');
-
-                        sheets.spreadsheets.values.get(request, (err: any, response: any) => {
-                            if (err) {
-                                message.edit('Snychronizing mission objectives: parsing failed...');
-                                console.error(err);
-                                return;
-                            }
-                            message.edit('Snychronizing mission objectives: parsing data...');
-                            response.data.values.forEach((element: any) => {
-                                console.log(element);
+                            sheets.spreadsheets.values.get(request, (err: any, response: any) => {
+                                if (err) {
+                                    message.edit("Snychronizing mission objectives: parsing failed...");
+                                    console.error(err);
+                                    return;
+                                }
+                                message.edit("Snychronizing mission objectives: parsing data...");
+                                response.data.values.forEach((element: any) => {
+                                    console.log(element);
+                                });
                             });
-                        });
-
-                    }, err => {
-                        message.edit('Snychronizing mission objectives: authentication failed...');
-                        console.error("auth error", err);
-                    });
+                        },
+                        err => {
+                            message.edit("Snychronizing mission objectives: authentication failed...");
+                            console.error("auth error", err);
+                        }
+                    );
                     console.log(message.id, message.content);
                 }
-
             });
         } else if (args.find(arg => arg === "mission-description")) {
             if (args[args.indexOf("mission-description") + 1]) {
@@ -246,7 +237,6 @@ export class AdminCommand extends AbstractCommand {
             { name: "mission-_(quaternary|quinary|senary)_", value: `Sets the mission text for the mission.` },
             { name: "mission-_(septenary|octonary|nonary|denary)_", value: `Sets the mission text for the mission.` },
             { name: "mission-description", value: `A general description of the mission(s).` }
-
         ];
     }
 }

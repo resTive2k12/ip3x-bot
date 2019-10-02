@@ -3,7 +3,6 @@ import * as Discord from "discord.js";
 import { AbstractCommand } from "./AbstractCommand";
 
 export class MissionCommand extends AbstractCommand {
-
     public command = "mission";
     public aliases: string[] = [];
 
@@ -11,7 +10,7 @@ export class MissionCommand extends AbstractCommand {
         super(client);
     }
 
-    run(message: Discord.Message, args?: string[] | undefined): void {
+    run(message: Discord.Message): void {
         if (!message.guild) {
             message.channel.send(`${message.author} Make sure, you are not sending this in a direct message.`);
             return;
@@ -32,27 +31,16 @@ export class MissionCommand extends AbstractCommand {
                 //.setThumbnail("attachment://logo-90-90.png")
                 // Set the color of the embed
                 .setAuthor("IP3X Command", "attachment://logo-90-90.png")
-                .setColor(0x00FF00)
+                .setColor(0x00ff00)
                 // Set the main content of the embed
                 .setDescription(`Some description`)
                 .setTimestamp(Date.now());
 
-
-            const missionPrios = ["primary", ":one:",
-                "secondary", ":two:",
-                "tertiary", ":three:",
-                "quaternary", ":four:",
-                "quinary", ":five:",
-                "senary", ":six:",
-                "septenary", ":seven:",
-                "octonary", ":eight:",
-                "nonary", ":nine:",
-                "denary", ":keycap_ten:"];
+            const missionPrios = ["primary", ":one:", "secondary", ":two:", "tertiary", ":three:", "quaternary", ":four:", "quinary", ":five:", "senary", ":six:", "septenary", ":seven:", "octonary", ":eight:", "nonary", ":nine:", "denary", ":keycap_ten:"];
 
             for (let i = 0; i < missionPrios.length; i += 2) {
                 if (doc.missions[missionPrios[i]]) {
-                    embed.addField(`${missionPrios[i + 1]} *${missionPrios[i].toUpperCase()} OBJECTIVE*`,
-                        doc.missions[missionPrios[i]]);
+                    embed.addField(`${missionPrios[i + 1]} *${missionPrios[i].toUpperCase()} OBJECTIVE*`, doc.missions[missionPrios[i]]);
                 }
             }
 
@@ -61,7 +49,5 @@ export class MissionCommand extends AbstractCommand {
             }
             message.channel.send(embed);
         });
-
-
     }
 }
