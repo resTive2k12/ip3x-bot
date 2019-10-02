@@ -5,3 +5,5 @@ build
 config.jsonpackage-lock.json
 **/*.log
 config/**
+config*.json
+*jwt*.json

@@ -16,5 +16,6 @@
             "autoFix": true
         }
     ],
-    "prettier.printWidth": 256
+    "prettier.printWidth": 256,
+    "editor.formatOnSave": true
 }

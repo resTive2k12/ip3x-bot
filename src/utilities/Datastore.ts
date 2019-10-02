@@ -2,34 +2,36 @@ import Datastore from "nedb";
 import { GuildEntry } from "../bot/api/storage";
 
 export class DB {
-    private static instance: Datastore;
+    private store: Datastore;
+
+    constructor(fileName: string, autoLoad = true) {
+        this.store = new Datastore({
+            filename: fileName,
+            autoload: autoLoad
+        });
+    }
 
     /**
      * Initializes the NoSql-Database.
      * @param fileName The location of the datastore file
      * @param autoLoad True if the datastore should be loaded immediatly
      */
-    public static initialize(fileName: string, autoLoad = true): void {
-        DB.instance = new Datastore({
-            filename: fileName,
-            autoload: autoLoad
-        });
-    }
 
-    public static fetch(id: string): Promise<GuildEntry> {
-        return new Promise<GuildEntry>(function(resolve, reject): void {
-            if (!DB.instance) reject("Database instance not loaded...");
-            DB.instance.findOne<GuildEntry>({ _id: id }, (err, document) => {
+
+    public fetch(id: string): Promise<GuildEntry> {
+        return new Promise<GuildEntry>((resolve, reject): void => {
+            if (!this.store) reject("Database instance not loaded...");
+            this.store.findOne<GuildEntry>({ _id: id }, (err, document) => {
                 if (err) reject(err);
                 else resolve(document);
             });
         });
     }
 
-    public static updateOrInsert(entry: GuildEntry): Promise<GuildEntry> {
+    public updateOrInsert(entry: GuildEntry): Promise<GuildEntry> {
         return new Promise<GuildEntry>((resolve, reject): void => {
-            if (!DB.instance) reject("Database instance not loaded...");
-            DB.instance.update({ _id: entry._id }, entry, { upsert: true }, (err, numRows, upsert) => {
+            if (!this.store) reject("Database instance not loaded...");
+            this.store.update({ _id: entry._id }, entry, { upsert: true }, (err, numRows) => {
                 if (err) reject(err);
                 else if (numRows < 1) reject(new Error("No data has been updated"));
                 else resolve(entry);
@@ -37,10 +39,10 @@ export class DB {
         });
     }
 
-    public static update(entry: GuildEntry): Promise<GuildEntry> {
+    public update(entry: GuildEntry): Promise<GuildEntry> {
         return new Promise<GuildEntry>((resolve, reject): void => {
-            if (!DB.instance) reject("Database instance not loaded...");
-            DB.instance.update({ _id: entry._id }, entry, {}, (err, numRows) => {
+            if (!this.store) reject("Database instance not loaded...");
+            this.store.update({ _id: entry._id }, entry, {}, (err, numRows) => {
                 if (err) reject(err);
                 else if (numRows < 1) reject(new Error("No data has been updated"));
                 else resolve(entry);
@@ -48,17 +50,17 @@ export class DB {
         });
     }
 
-    public static insert(entry: GuildEntry): Promise<GuildEntry> {
+    public insert(entry: GuildEntry): Promise<GuildEntry> {
         return new Promise<GuildEntry>((resolve, reject): void => {
-            if (!DB.instance) reject("Database instance not loaded...");
-            DB.instance.insert(entry, (err, newdoc) => {
+            if (!this.store) reject("Database instance not loaded...");
+            this.store.insert(entry, (err, newdoc) => {
                 if (err) reject(err);
                 else resolve(newdoc);
             });
         });
     }
 
-    public static compact(): void {
-        DB.instance.persistence.compactDatafile();
+    public compact(): void {
+        this.store.persistence.compactDatafile();
     }
 }

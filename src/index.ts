@@ -1,6 +1,6 @@
 import * as Discord from "discord.js";
 import { Bot } from "./bot/bot";
-import config from "../config/config.dev.json";
+import config from "./config.dev.json";
 import Datastore from "nedb";
 import { BotConfig } from "./bot/api/bot";
 
