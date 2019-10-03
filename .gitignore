@@ -7,3 +7,5 @@ config.jsonpackage-lock.json
 config/**
 config*.json
 *jwt*.json
+tmp/google.ts
+tmp/original_index.js

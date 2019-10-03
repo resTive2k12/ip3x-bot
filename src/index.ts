@@ -1,8 +1,8 @@
 import * as Discord from "discord.js";
 import { Bot } from "./bot/bot";
-import config from "./config.dev.json";
+import config from "../config/config.dev.json";
 import Datastore from "nedb";
-import { BotConfig } from "./bot/api/bot";
+import { BotConfig } from "./bot/api/botconfig";
 
 export interface BotCommand {
     process(msg: string, answer: Discord.Message): Promise<void>;

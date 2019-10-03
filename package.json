@@ -6,7 +6,7 @@
     "scripts": {
         "start": "npm run build:live",
         "clean": "rm -rf build/",
-        "build": "rm -rf build/ && tsc -p . && cpx images/**/*.* build/images && docker build -t thorstenst/ip3x-bot .",
+        "build": "rm -rf build/ && tsc -p . --skipLibCheck && cpx images/**/*.* build/images && docker build -t thorstenst/ip3x-bot .",
         "build:live": "nodemon --watch src -e ts,tsx --exec \"npx ts-node src/index.ts\"",
         "test": "mocha -r ts-node/register test/**/*.ts"
     },

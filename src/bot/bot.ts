@@ -2,7 +2,7 @@ import * as discord from "discord.js";
 import * as fs from "fs";
 import Enmap from "enmap";
 import { Client } from "./api/client";
-import { BotConfig } from "./api/bot";
+import { BotConfig } from "./api/botconfig";
 import { Command } from "./api/command";
 
 export class Bot {
