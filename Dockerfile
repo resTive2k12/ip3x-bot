@@ -8,4 +8,4 @@ RUN npm install
 
 COPY build .
 
-CMD ["node", "index.js"]
+CMD ["ts-node", "--transpile-only", "index.js"]

@@ -26,7 +26,7 @@ export class HelpCommand extends AbstractCommand {
                 });
             }
         } else {
-            embed.setDescription("A list of currently available commands.\nUse `@IP3X Assistant !help <command name>` for more detailed information.\n__You use the help command in this direct message.__");
+            embed.setDescription("A list of currently available commands.\nUse `@IP3X Assistant !help <command name>` for more detailed information.\n__You **should** use further help commands in this direct message.__");
             embed.addField("known commands", this.client.bot.commands.map(command => command.command).join(","));
         }
 

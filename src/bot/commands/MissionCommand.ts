@@ -1,6 +1,7 @@
 import { Client } from "../api/client";
 import * as Discord from "discord.js";
 import { AbstractCommand } from "./AbstractCommand";
+import { HelpField } from "../..";
 
 export class MissionCommand extends AbstractCommand {
     public command = "mission";
@@ -15,39 +16,38 @@ export class MissionCommand extends AbstractCommand {
             message.channel.send(`${message.author} Make sure, you are not sending this in a direct message.`);
             return;
         }
-        this.showMission(this.client.bot.config.db, message.guild.id, message);
+        this.showMission(message);
     }
 
-    showMission(db: Nedb<any>, guildId: string, message: Discord.Message): void {
-        db.findOne({ "guild-id": guildId }, (err, doc) => {
-            if (!doc || !doc.missions) {
-                message.channel.send(`:information_source:  ${message.member} there are currently no active missions!`);
-                return;
-            }
-            const embed = new Discord.RichEmbed()
-                // Set the title of the field
-                .setTitle("Currently active missions for the IP3X Corporation")
-                .attachFiles(["./images/logo-90-90.png"])
-                //.setThumbnail("attachment://logo-90-90.png")
-                // Set the color of the embed
-                .setAuthor("IP3X Command", "attachment://logo-90-90.png")
-                .setColor(0x00ff00)
-                // Set the main content of the embed
-                .setDescription(`Some description`)
-                .setTimestamp(Date.now());
+    showMission(message: Discord.Message): void {
+        this.db
+            .fetch(message.guild.id)
+            .then(doc => {
+                if (!doc || !doc.mission || doc.mission.objectives.length === 0) {
+                    message.channel.send(`:information_source:  ${message.member} there are currently no objectives!`);
+                } else {
+                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                    const embed = new Discord.RichEmbed();
+                    embed.setTitle(doc.mission.title);
+                    embed.setDescription(doc.mission.description || "");
+                    embed.attachFiles(["./images/logo-90-90.png"]);
+                    embed.setAuthor("IP3X Command", "attachment://logo-90-90.png");
+                    embed.setColor(0x00ff00);
+                    embed.setTimestamp(doc.mission.lastSync);
 
-            const missionPrios = ["primary", ":one:", "secondary", ":two:", "tertiary", ":three:", "quaternary", ":four:", "quinary", ":five:", "senary", ":six:", "septenary", ":seven:", "octonary", ":eight:", "nonary", ":nine:", "denary", ":keycap_ten:"];
-
-            for (let i = 0; i < missionPrios.length; i += 2) {
-                if (doc.missions[missionPrios[i]]) {
-                    embed.addField(`${missionPrios[i + 1]} *${missionPrios[i].toUpperCase()} OBJECTIVE*`, doc.missions[missionPrios[i]]);
+                    doc.mission.objectives.forEach(objective => {
+                        embed.addField(`${objective.title}`, `${objective.description}`);
+                    });
+                    message.channel.send(embed);
                 }
-            }
+            })
+            .catch(reason => {
+                console.log("Error loading data", reason);
+                message.channel.send(`${message.author} Error loading mission objectives. Check protocol..`);
+            });
+    }
 
-            if (doc.missions.description) {
-                embed.setDescription(doc.missions.description);
-            }
-            message.channel.send(embed);
-        });
+    help(): HelpField[] {
+        return [{ name: "!mission", value: "Shows the current active objectives.", inline: false }];
     }
 }

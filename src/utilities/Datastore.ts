@@ -11,19 +11,18 @@ export class DB {
         });
     }
 
-    /**
-     * Initializes the NoSql-Database.
-     * @param fileName The location of the datastore file
-     * @param autoLoad True if the datastore should be loaded immediatly
-     */
-
-
     public fetch(id: string): Promise<GuildEntry> {
         return new Promise<GuildEntry>((resolve, reject): void => {
             if (!this.store) reject("Database instance not loaded...");
             this.store.findOne<GuildEntry>({ _id: id }, (err, document) => {
                 if (err) reject(err);
-                else resolve(document);
+                if (!document) {
+                    const error = new Error();
+                    error.message = `could not find document with id "${id}".`;
+                    error.name = "ID not found";
+                    reject(error);
+                }
+                resolve(document);
             });
         });
     }

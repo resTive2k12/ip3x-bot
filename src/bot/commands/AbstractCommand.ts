@@ -2,6 +2,7 @@ import { Command } from "../api/command";
 import * as Discord from "discord.js";
 import { Client } from "../api/client";
 import { HelpField } from "../..";
+import { DB } from "../../utilities/Datastore";
 
 export abstract class AbstractCommand implements Command {
     prototype?: object | undefined;
@@ -11,9 +12,11 @@ export abstract class AbstractCommand implements Command {
     public botMentionMandatory = false;
 
     public client: Client;
+    protected db: DB;
 
     constructor(client: Client) {
         this.client = client;
+        this.db = client.bot.config.db;
     }
 
     matches(args: string[]): boolean {
@@ -34,6 +37,7 @@ export abstract class AbstractCommand implements Command {
         return cmd === prefix + this.command || !!this.aliases.find(alias => cmd === prefix + alias);
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     run(message: Discord.Message, args?: string[] | undefined): void {
         //nothing to do here
     }

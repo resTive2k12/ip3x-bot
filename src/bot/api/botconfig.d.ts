@@ -1,5 +1,7 @@
+import { DB } from "../../utilities/Datastore";
+
 export interface BotConfig {
-    db: Nedb<any>;
+    db: DB;
     token: string;
     prefix: string;
 }

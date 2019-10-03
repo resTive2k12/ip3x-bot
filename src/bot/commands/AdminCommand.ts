@@ -4,6 +4,7 @@ import { HelpField } from "../..";
 import { AbstractCommand } from "./AbstractCommand";
 import { GoogleSheets } from "../../utilities/GoogleSheets";
 import { google } from "googleapis";
+import { GuildEntry, MissionEntry } from "../api/storage";
 
 export class AdminCommand extends AbstractCommand {
     public command = "config";
@@ -20,11 +21,11 @@ export class AdminCommand extends AbstractCommand {
         }
 
         if (args.find(arg => arg === "bind-welcome-channel")) {
-            this.setWelcomeChannel(this.client.bot.config.db, message);
+            this.setWelcomeChannel(message);
         } else if (args.find(arg => arg === "unbind-welcome-channel")) {
-            this.unsetWelcomeChannel(this.client.bot.config.db, message);
+            this.unsetWelcomeChannel(message);
         } else if (args.find(arg => arg === "mission-clear")) {
-            this.clearMissions(this.client.bot.config.db, message);
+            this.clearMissions(message);
         } else if (args.find(arg => arg === "mission-sync")) {
             message.channel.send("Snychronizing mission objectives: authenticating", {}).then(message => {
                 if (message instanceof Discord.Message) {
@@ -49,8 +50,20 @@ export class AdminCommand extends AbstractCommand {
                                     return;
                                 }
                                 message.edit("Snychronizing mission objectives: parsing data...");
+                                let mission: MissionEntry;
                                 response.data.values.forEach((element: any) => {
-                                    console.log(element);
+                                    if (element[0] === "Title" && element[2]) {
+                                        mission = { title: element[2], objectives: [], description: "", lastSync: Date.now() };
+                                    } else if (element[0] === "Description" && element[2]) {
+                                        mission.description = element[2];
+                                    } else if (element[0] === "Field" && element[2]) {
+                                        mission.objectives.push({ title: element[1], description: element[2] });
+                                    }
+                                });
+                                this.db.fetch(message.guild.id).then(entry => {
+                                    entry.mission = mission;
+                                    this.db.update(entry);
+                                    message.edit("Snychronizing mission objectives: parsing finished; data updated...");
                                 });
                             });
                         },
@@ -62,19 +75,6 @@ export class AdminCommand extends AbstractCommand {
                     console.log(message.id, message.content);
                 }
             });
-        } else if (args.find(arg => arg === "mission-description")) {
-            if (args[args.indexOf("mission-description") + 1]) {
-                this.setMissionDescription(this.client.bot.config.db, message, args[args.indexOf("mission-description") + 1].replace(/\"/g, ""));
-            }
-        } else if (args.find(arg => arg.startsWith("mission-"))) {
-            const re = /(mission-(primary|secondary|tertiary|quaternary|quinary|senary|septenary|octonary|nonary|denary)){1}/im;
-            const ms = args.find(arg => arg.startsWith("mission-")) || "";
-            const match = ms.match(re) || [];
-            if (match[2] && args[args.indexOf(match[1]) + 1]) {
-                this.setMission(this.client.bot.config.db, message, match[2], args[args.indexOf(match[1]) + 1].replace(/\"/g, ""));
-            } else {
-                message.channel.send("Could not read/parse mission description.");
-            }
         } else {
             message.channel.send("Could not find any configuration command. Try !help");
         }
@@ -105,125 +105,76 @@ export class AdminCommand extends AbstractCommand {
         return true;
     }
 
-    setWelcomeChannel(db: Nedb, message: Discord.Message): void {
-        db.findOne({ "guild-id": message.guild.id }, (err, doc) => {
-            if (err) {
-                console.error("error finding guild config", err);
-                return;
-            }
-            if (doc === null) {
-                console.debug(`no config entry found for guild ${message.guild.name}, ${message.guild.id}`);
-                db.insert(
-                    {
-                        "guild-id": message.guild.id,
-                        "welcome-channel": message.channel.id,
-                        "last-update": Date.now()
-                    },
-                    (err, insertedDoc) => {
-                        if (err) {
-                            console.error(`Error inserting document: ${err}`);
-                            return;
-                        }
-                        console.debug(`inserted document: ${insertedDoc}`);
-                    }
-                );
-            } else {
-                console.debug(`config entry found for guild ${message.guild.name}, ${message.guild.id}: ${doc._id}`);
-                doc["welcome-channel"] = message.channel.id;
-                doc["last-update"] = Date.now();
-                db.update({ _id: doc._id }, doc, {}, (err: any, numAffected: any, affectedDocs: any, upsert: any) => {
-                    console.log(err, numAffected, affectedDocs, upsert);
-                });
-                db.persistence.compactDatafile();
-            }
-            message.channel.send(`${message.member} the channel for the welcome message is now: ${(message.channel as Discord.TextChannel).name}`);
-        });
+    setWelcomeChannel(message: Discord.Message): void {
+        this.db
+            .fetch(message.guild.id)
+            .then(async entry => {
+                const doc = entry;
+                doc.welcomeChannelId = message.channel.id;
+                this.db
+                    .update(doc)
+                    .then(() => {
+                        message.channel.send(`${message.member}: Welcome channel set to ${message.channel}`);
+                    })
+                    .catch(reason => {
+                        console.log("Error updating welcome channel", reason);
+                        message.channel.send(`${message.member} Error updating welcome. Check protocol.`);
+                    });
+            })
+            .catch(reason => {
+                if ((reason as Error).name === "ID not found") {
+                    const newDoc: GuildEntry = { _id: message.guild.id, lastUpdate: Date.now(), welcomeChannelId: message.channel.id };
+                    this.db.insert(newDoc).catch(reason => {
+                        console.error("Error creating new empty guild-data", reason);
+                    });
+                } else {
+                    console.error("Error fetch guild data", reason);
+                }
+            });
     }
 
-    unsetWelcomeChannel(db: Nedb, message: Discord.Message): void {
-        db.findOne({ "guild-id": message.guild.id }, (err, doc) => {
-            if (err) {
-                console.error("error finding guild config", err);
-                return;
-            }
-            if (!doc) {
-                return;
-            }
-            doc["welcome-channel"] = undefined;
-            db.update({ _id: doc._id }, doc);
-            db.persistence.compactDatafile();
-            message.channel.send(`${message.member} channel for welcome message cleared.`);
-        });
+    unsetWelcomeChannel(message: Discord.Message): void {
+        this.db
+            .fetch(message.guild.id)
+            .then(doc => {
+                if (doc.welcomeChannelId) {
+                    doc.welcomeChannelId = undefined;
+                    this.db
+                        .update(doc)
+                        .catch(reason => {
+                            console.log(`error updating welcome channel for id "${message.guild.id}"`, reason);
+                            message.channel.send(`${message.member} Error updating data. Check protocol.`);
+                        })
+                        .then(() => {
+                            message.channel.send(`${message.member}: Welcome channel has been reset.`);
+                        });
+                }
+            })
+            .catch(reason => {
+                console.log(`error fetching guilddata for id "${message.guild.id}"`, reason);
+            });
     }
 
-    clearMissions(db: Nedb<any>, message: Discord.Message): void {
-        db.findOne({ "guild-id": message.guild.id }, (err, doc) => {
-            if (err) {
-                console.error(`Error loading config for server ${message.guild.name} (${message.guild.id})`);
-            }
-            if (doc == null) {
-                doc = { "guild-id": message.guild.id, "last-update": Date.now() };
-                db.insert(doc);
-                db.persistence.compactDatafile();
-            } else {
-                doc.missions = undefined;
-                doc["last-updated"] = Date.now();
-                db.update({ _id: doc._id }, doc);
-                db.persistence.compactDatafile();
-            }
-            message.channel.send(`${message.member} mission objectives have been cleared.`);
-        });
-    }
-
-    setMission(db: Nedb<any>, message: Discord.Message, type: string, missiontext: string): void {
-        db.findOne({ "guild-id": message.guild.id }, (err, doc) => {
-            if (err) {
-                console.error(`Error loading config for server ${message.guild.name} (${message.guild.id})`);
-            }
-            if (doc == null) {
-                //console.log("inserting mission ", type, missiontext);
-                doc = { "guild-id": message.guild.id, "last-update": Date.now() };
-                doc.missions = {};
-                doc.missions[type] = missiontext;
-                db.insert(doc, (err, inserteddoc) => {
-                    doc = inserteddoc;
-                });
-                db.persistence.compactDatafile();
-            } else {
-                //console.log("updating current mission ", type, missiontext, doc);
-                doc["last-updated"] = Date.now();
-                if (!doc.missions) doc.missions = {};
-                doc.missions[type] = missiontext;
-                db.update({ _id: doc._id }, doc);
-                db.persistence.compactDatafile();
-            }
-        });
-    }
-
-    setMissionDescription(db: Nedb, message: Discord.Message, text: string): void {
-        db.findOne({ "guild-id": message.guild.id }, (err, doc) => {
-            if (err) {
-                console.error("error finding guild config", err);
-                return;
-            }
-            if (doc == null) {
-                //console.log("inserting mission ", type, missiontext);
-                doc = { "guild-id": message.guild.id, "last-update": Date.now() };
-                doc.missions = {};
-                doc.missions["description"] = text;
-                db.insert(doc, (err, inserteddoc) => {
-                    doc = inserteddoc;
-                });
-                db.persistence.compactDatafile();
-            } else {
-                //console.log("updating current mission ", type, missiontext, doc);
-                doc["last-updated"] = Date.now();
-                if (!doc.missions) doc.missions = {};
-                doc.missions["description"] = text;
-                db.update({ _id: doc._id }, doc);
-                db.persistence.compactDatafile();
-            }
-        });
+    clearMissions(message: Discord.Message): void {
+        this.db
+            .fetch(message.guild.id)
+            .then(doc => {
+                if (doc.mission) {
+                    doc.mission = undefined;
+                    this.db
+                        .update(doc)
+                        .catch(reason => {
+                            console.log(`error updating mission data for id "${message.guild.id}"`, reason);
+                            message.channel.send(`${message.member} Error updating data. Check protocol.`);
+                        })
+                        .then(() => {
+                            message.channel.send(`${message.member}: Missions have been cleared`);
+                        });
+                }
+            })
+            .catch(reason => {
+                console.log(`error fetching guilddata for id "${message.guild.id}"`, reason);
+            });
     }
 
     help(): HelpField[] {
@@ -232,11 +183,7 @@ export class AdminCommand extends AbstractCommand {
             { name: "bind-welcome-channel", value: `Binds the current channel to be the displaying channel for the welcome message. Overwrites previously configured channels silently.` },
             { name: "unbind-welcome-channel", value: `Removes any existing binding for the welcome channel. If no channel was set nothing happens.` },
             { name: "mission-clear", value: `Removes the description and all missions.` },
-            { name: "mission-sync", value: `Synchronizes tue current objectives with the well known google-sheet.` },
-            { name: "*mission-_(primary|secondary|tertiary)_", value: `Sets the mission text for the mission.` },
-            { name: "mission-_(quaternary|quinary|senary)_", value: `Sets the mission text for the mission.` },
-            { name: "mission-_(septenary|octonary|nonary|denary)_", value: `Sets the mission text for the mission.` },
-            { name: "mission-description", value: `A general description of the mission(s).` }
+            { name: "mission-sync", value: `Synchronizes the current objectives with the well known google-sheet.` }
         ];
     }
 }

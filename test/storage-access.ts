@@ -8,13 +8,11 @@ import { DB } from "../src/utilities/Datastore";
 const storageFile = "test/data/storage-access-tests.store";
 let db: DB;
 
-
 before(() => {
     if (fs.existsSync(storageFile)) {
         fs.unlinkSync(storageFile);
     }
     db = new DB(storageFile);
-
 });
 
 afterEach(() => {
@@ -48,9 +46,10 @@ describe("Fetching guild data from database", () => {
         });
     });
 
-    it("fetching wrong Testdata returns null document", () => {
-        return db.fetch("unknown id").then(entry => {
-            expect(entry).null;
+    it("fetching wrong Testdata returns error", () => {
+        return db.fetch("unknown id").catch(reason => {
+            expect(reason).to.be.instanceOf(Error);
+            expect((reason as Error).name).equals("ID not found");
         });
     });
 });
@@ -65,14 +64,16 @@ describe("manipulating guild data", () => {
     });
     it("insert existing document with id 'Test-ID 123' fails", () => {
         const guildData: GuildEntry = { _id: "Test-ID 123", lastUpdate: 2 };
-        return db.insert(guildData)
+        return db
+            .insert(guildData)
             .then(newEntry => expect(newEntry).to.be.null)
             .catch(rej => expect(rej).to.be.instanceOf(Error)); //["Error: Can't insert key Test-ID 123, it violates the unique constraint"]));
     });
 
     it("inserts or updates a new dataset with ID 'Test-ID 456'", () => {
         const guildData: GuildEntry = { _id: "Test-ID 456", lastUpdate: 1 };
-        return db.updateOrInsert(guildData)
+        return db
+            .updateOrInsert(guildData)
             .then(newEntry => {
                 expect(newEntry).to.be.null;
             })
@@ -81,7 +82,8 @@ describe("manipulating guild data", () => {
 
     it("inserts or updates a new dataset with ID 'Test-ID 456' again and has updated 'lastUpdate'-value", () => {
         const guildData: GuildEntry = { _id: "Test-ID 456", lastUpdate: 3 };
-        return db.updateOrInsert(guildData)
+        return db
+            .updateOrInsert(guildData)
             .then(newEntry => {
                 expect(newEntry).to.be.null;
                 expect(newEntry.lastUpdate).to.equal(3);

@@ -9,3 +9,4 @@ config*.json
 *jwt*.json
 tmp/google.ts
 tmp/original_index.js
+package-lock.json

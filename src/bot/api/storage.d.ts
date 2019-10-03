@@ -20,6 +20,10 @@ export interface ObjectiveEntry {
 
 /** A collection of mission objectives. */
 export interface MissionEntry {
+    /** Title for this mission. */
+    title: string;
+    /** Longer (In depth) description. */
+    description: string;
     /** Ordered list of objectives. Semantically, the first entry is the "primary" objective. */
     objectives: ObjectiveEntry[];
     /** Timestamp of last sync. */
