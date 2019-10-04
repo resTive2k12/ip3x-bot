@@ -26,7 +26,7 @@ export class Bot {
     start(): void {
         this.loadEvents();
         this.instantiateCommands();
-        this.discordClient.login(this.config.token);
+        this.discordClient.login(this.config.token).catch(error => console.error("Error logging in the bot", error));
         this.discordClient.on("ready", this.onReady.bind(this));
     }
 
