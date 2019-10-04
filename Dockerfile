@@ -3,9 +3,13 @@ FROM node:10
 WORKDIR /usr/src/app
 
 COPY package*.json ./
-
-RUN npm install
-
 COPY build .
 
-CMD ["ts-node", "--transpile-only", "index.js"]
+
+RUN npm install -g typescript
+RUN npm install -g ts-node
+RUN npm install
+
+
+
+CMD ["ts-node", "index.ts"]

@@ -29,7 +29,7 @@ export class AdminCommand extends AbstractCommand {
         } else if (args.find(arg => arg === "mission-sync")) {
             message.channel.send("Snychronizing mission objectives: authenticating", {}).then(message => {
                 if (message instanceof Discord.Message) {
-                    GoogleSheets.auth().then(
+                    GoogleSheets.auth(this.client.bot.config.credentials).then(
                         succ => {
                             message.edit("Snychronizing mission objectives: authenticated");
                             const request = {

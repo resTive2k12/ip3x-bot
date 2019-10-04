@@ -6,9 +6,15 @@
     "scripts": {
         "start": "npm run build:live",
         "clean": "rm -rf build/",
-        "build": "npm run clean && cpx images/**/*.* build/images && cpx \"src/**/*.ts\" build",
+        "copy-images": "cpx images/**/*.* build/images",
+        "copy-sources": "cpx \"src/**/*.ts\" build && cpx src/tsconfig.json build",
+        "build": "npm run clean && npm run copy-images && npm run copy-sources",
+        "docker": "npm run build && docker build -t thorstenst/ip3x-bot .",
         "build:live": "nodemon --watch src -e ts,tsx --exec \"npx ts-node src/index.ts\"",
-        "test": "mocha -r ts-node/register test/**/*.ts"
+        "docker:live:win": "npm run docker && docker run --mount src=\"%pwd%/config\",target=/usr/src/app/config,type=bind --name dev-bot thorstenst/ip3x-bot",
+        "docker:live:linux": "npm run docker && docker run --mount src=\"$pwd/config\",target=/usr/src/app/config,type=bind --name dev-bot thorstenst/ip3x-bot",
+        "test": "mocha -r ts-node/register test/**/*.ts",
+        "test2": "cross-env cwd=x&& echo $cwd-%pwd%"
     },
     "author": "",
     "license": "ISC",
@@ -19,11 +25,11 @@
         "googleapis": "^43.0.0",
         "nedb": "^1.8.0",
         "request": "^2.88.0",
+        "ts-node": "^8.4.1",
         "typescript": "^3.6.3",
         "winston": "^3.2.1",
         "zeromq": "^5.1.0",
-        "zlib": "^1.0.5",
-        "ts-node": "^8.4.1"
+        "zlib": "^1.0.5"
     },
     "devDependencies": {
         "@types/chai": "^4.2.3",
@@ -35,6 +41,7 @@
         "@typescript-eslint/parser": "^2.3.2",
         "chai": "^4.2.0",
         "cpx": "^1.5.0",
+        "cross-env": "^6.0.3",
         "eslint": "^6.5.1",
         "mocha": "^6.2.1",
         "nodemon": "^1.19.3"
