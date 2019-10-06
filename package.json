@@ -11,10 +11,7 @@
         "build": "npm run clean && npm run copy-images && npm run copy-sources",
         "docker": "npm run build && docker build -t thorstenst/ip3x-bot .",
         "build:live": "nodemon --watch src -e ts,tsx --exec \"npx ts-node src/index.ts\"",
-        "docker:live:win": "npm run docker && docker run --mount src=\"%pwd%/config\",target=/usr/src/app/config,type=bind --name dev-bot thorstenst/ip3x-bot",
-        "docker:live:linux": "npm run docker && docker run --mount src=\"$pwd/config\",target=/usr/src/app/config,type=bind --name dev-bot thorstenst/ip3x-bot",
-        "test": "mocha -r ts-node/register test/**/*.ts",
-        "test2": "cross-env cwd=x&& echo $cwd-%pwd%"
+        "test": "mocha -r ts-node/register test/**/*.ts"
     },
     "author": "",
     "license": "ISC",
