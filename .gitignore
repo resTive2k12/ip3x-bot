@@ -2,13 +2,14 @@ node_modules
 data
 datastore
 build
-config.jsonpackage-lock.json
+package-lock.json
 **/*.log
+config
 config/**
 config*.json
 *jwt*.json
-tmp/google.ts
-tmp/original_index.js
+tmp
+tmp/**
 package-lock.json
 build-win.sh
 build-win.bat
