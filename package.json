@@ -1,0 +1,40 @@
+{
+  "name": "ip3x",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build:live:assistant": "nodemon --watch src -e ts,tsx --exec \"npx ts-node src/bots/index.ts\"",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^2.3.3",
+    "@typescript-eslint/parser": "^2.3.3",
+    "eslint": "^6.5.1",
+    "eslint-config-google": "^0.14.0",
+    "eslint-config-prettier": "^6.4.0",
+    "eslint-plugin-jsdoc": "^15.9.10",
+    "eslint-plugin-prettier": "^3.1.1",
+    "nodemon": "^1.19.3",
+    "prettier": "^1.18.2",
+    "ts-node": "^8.4.1",
+    "typescript": "^3.6.3"
+  },
+  "dependencies": {
+    "@types/node": "^12.7.11",
+    "discord.js": "^11.5.1",
+    "fs": "0.0.1-security",
+    "winston": "^3.2.1"
+  },
+  "nodemonConfig": {
+    "verbose": true,
+    "ignore": [
+      "test/*",
+      "docs/*"
+    ],
+    "delay": "1000"
+  }
+}

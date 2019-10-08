@@ -1,0 +1,5 @@
+ip3x.code-workspace
+node_modules
+build
+**/config
+**/logs
