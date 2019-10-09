@@ -1,33 +1,49 @@
- {
-    "parser":  "@typescript-eslint/parser",  // Specifies the ESLint parser
-    "extends":  [
-      "plugin:jsdoc/recommended",
-      "google",
-      "plugin:@typescript-eslint/recommended",  // Uses the recommended rules from the @typescript-eslint/eslint-plugin
-      "prettier/@typescript-eslint",  // Uses eslint-config-prettier to disable ESLint rules from @typescript-eslint/eslint-plugin that would conflict with prettier
-      "plugin:prettier/recommended"  // Enables eslint-plugin-prettier and displays prettier errors as ESLint errors. Make sure this is always the last configuration in the extends array.
-    ],
-    "parserOptions":  {
-      "ecmaVersion": 2019,
-      "sourceType": "module",
-      "ecmaFeatures": {
-        "jsx": true
-      }
-    },
-    "rules": {
-      "comma-dangle": ["error", "never"],
-      "require-jsdoc": ["error", {"require": {
-        "FunctionDeclaration": true,
-        "MethodDefinition": true,
-        "ClassDeclaration": false,
-        "ArrowFunctionExpression": false,
-        "FunctionExpression": true
-      }}],
-      "@typescript-eslint/no-unused-vars": ["error", {"vars":"local"}],
-      "jsdoc/require-description": 2,
-      "jsdoc/no-undefined-types":0,
-      "valid-jsdoc":"off"
+{
+  "parser": "@typescript-eslint/parser", // Specifies the ESLint parser
+  "extends": [
+    "eslint:recommended",
+    "plugin:react/recommended",
+    "plugin:@typescript-eslint/recommended",
+    "prettier/@typescript-eslint",
+    "plugin:prettier/recommended"
+  ],
+  "plugins": [
+    "react",
+    "@typescript-eslint",
+    "prettier"
+  ],
+  "parserOptions": {
+    "ecmaVersion": 2019,
+    "sourceType": "module",
+    "ecmaFeatures": {
+      "jsx": true
     }
-
-
+  },
+  "rules": {
+    "comma-dangle": [
+      "error",
+      "never"
+    ],
+    "require-jsdoc": [
+      "error",
+      {
+        "require": {
+          "FunctionDeclaration": true,
+          "MethodDefinition": true,
+          "ClassDeclaration": false,
+          "ArrowFunctionExpression": false,
+          "FunctionExpression": true
+        }
+      }
+    ],
+    "@typescript-eslint/no-unused-vars": [
+      "error",
+      {
+        "vars": "local"
+      }
+    ],
+    "jsdoc/require-description": 2,
+    "jsdoc/no-undefined-types": 0,
+    "valid-jsdoc": "off"
   }
+}

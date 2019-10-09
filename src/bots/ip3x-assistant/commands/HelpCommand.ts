@@ -1,14 +1,14 @@
-import { Client } from "../api/client";
 import * as Discord from "discord.js";
-import { HelpField } from "../..";
 import { AbstractCommand } from "./AbstractCommand";
+import { IP3XAssistant } from "../ip3x-assistant";
+import { HelpField } from "../api/command.spec";
 
 export class HelpCommand extends AbstractCommand {
     public command = "help";
     public aliases: string[] = [];
     public botMentionMandatory = true;
 
-    constructor(client: Client) {
+    constructor(client: IP3XAssistant) {
         super(client);
     }
 
@@ -16,8 +16,8 @@ export class HelpCommand extends AbstractCommand {
         const embed = new Discord.RichEmbed();
 
         if (args[2]) {
-            const prefix = this.client.bot.config.prefix;
-            const result = this.client.bot.commands.find(command => command.command.toLowerCase() === args[2] || !!command.aliases.find(alias => args[2] === prefix + alias));
+            const prefix = this.client.config.prefix;
+            const result = this.client.commands.find(command => command.command.toLowerCase() === args[2] || !!command.aliases.find(alias => args[2] === prefix + alias));
             if (result) {
                 embed.setDescription(`Detailed instructions for the "_${args[2]}_" command.`);
                 const helpFields = result.help();
@@ -27,7 +27,7 @@ export class HelpCommand extends AbstractCommand {
             }
         } else {
             embed.setDescription("A list of currently available commands.\nUse `@IP3X Assistant !help <command name>` for more detailed information.\n__You **should** use further help commands in this direct message.__");
-            embed.addField("known commands", this.client.bot.commands.map(command => command.command).join(","));
+            embed.addField("known commands", this.client.commands.map(command => command.command).join(","));
         }
 
         embed.setAuthor("Automated IP3X assistant", "attachment://charity.png", "https://inara.cz/squadron/6172/");

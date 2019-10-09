@@ -2,7 +2,15 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "rootDir": "./",
-    "outDir": "../../build/bots"
+    "outDir": "../../build/bots",
+    "resolveJsonModule": true
   },
-  "references": [{"path": "../utilities"}]
+  "include": [
+    "../config"
+  ],
+  "references": [
+    {
+      "path": "../utilities"
+    }
+  ]
 }
