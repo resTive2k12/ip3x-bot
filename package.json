@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build:live:assistant": "nodemon --watch src -e ts,tsx --exec \"npx ts-node src/bots/index.ts\"",
+    "build:live:assistant": "nodemon --watch src -e ts,tsx --exec \"npx env-cmd ts-node src/bots/index.ts target=assistant\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -13,6 +13,8 @@
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^2.3.3",
     "@typescript-eslint/parser": "^2.3.3",
+    "cross-env": "^6.0.3",
+    "env-cmd": "^10.0.1",
     "eslint": "^6.5.1",
     "eslint-config-google": "^0.14.0",
     "eslint-config-prettier": "^6.4.0",
@@ -30,7 +32,7 @@
     "winston": "^3.2.1"
   },
   "nodemonConfig": {
-    "verbose": true,
+    "verbose": false,
     "ignore": [
       "test/*",
       "docs/*"
