@@ -45,11 +45,11 @@ export class AdminCommand extends AbstractCommand {
 
                             sheets.spreadsheets.values.get(request, (err: any, response: any) => {
                                 if (err) {
-                                    message.edit("Snychronizing mission objectives: parsing failed...");
+                                    message.edit("Synchronizing mission objectives: parsing failed...");
                                     console.error(err);
                                     return;
                                 }
-                                message.edit("Snychronizing mission objectives: parsing data...");
+                                message.edit("Synchronizing mission objectives: parsing data...");
                                 let mission: MissionEntry;
                                 response.data.values.forEach((element: any) => {
                                     if (element[0] === "Title" && element[2]) {
@@ -63,7 +63,7 @@ export class AdminCommand extends AbstractCommand {
                                 this.db.fetch(message.guild.id).then(entry => {
                                     entry.mission = mission;
                                     this.db.update(entry);
-                                    message.edit("Snychronizing mission objectives: parsing finished; data updated...");
+                                    message.edit("Synchronizing mission objectives: parsing finished; data updated...");
                                 });
                             });
                         },

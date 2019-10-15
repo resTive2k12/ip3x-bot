@@ -1,48 +1,33 @@
-import { Command } from "../api/command";
 import * as Discord from "discord.js";
 import { Client } from "../api/client";
 import { HelpField } from "../..";
 import { DB } from "../../utilities/Datastore";
+import { AbstractCommand } from "./AbstractCommand";
 
-export abstract class AbstractCommand implements Command {
+export class JoinCommand extends AbstractCommand {
     prototype?: object | undefined;
 
     public command = "join";
     public aliases: string[] = ["apply"];
     public botMentionMandatory = false;
 
-    public client: Client;
-    protected db: DB;
-
     constructor(client: Client) {
-        this.client = client;
-        this.db = client.bot.config.db;
-    }
-
-    matches(args: string[]): boolean {
-        const prefix = this.client.bot.config.prefix;
-
-        let cmd = args[0];
-        const botMention = cmd.match(/^<@!?(\d+)>$/) || [];
-        const msgToBot = botMention.length != 0 && botMention[1] == this.client.user.id;
-
-        if (this.botMentionMandatory && !msgToBot) {
-            return false;
-        }
-
-        if (msgToBot) {
-            cmd = args[1];
-        }
-
-        return cmd === prefix + this.command || !!this.aliases.find(alias => cmd === prefix + alias);
+        super(client);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     run(message: Discord.Message, args?: string[] | undefined): void {
-        //nothing to do here
+        const applicant = message.author;
+        applicant.send('\n\no7 CMDR ' + applicant.username + '\n\nThe IP3X recruitment process takes a few minutes to complete fully and will see you join IP3X both in-game and on Inara.\n'+
+        'This process is mostly automated via this bot - and finalized by verification from one of our Admirals.\n\nCompletion of this process is required within '+
+        '1 week of starting it, or the bot will automatically revoke your access.\n\nPlease confirm you wish to proceed via the \'reactions\' below this message.').then(msg => {
+            const m = msg as Discord.Message;
+            m.react('✅');
+            m.react('❌');
+        });
     }
 
     help(): HelpField[] {
-        return [{ name: this.client.bot.config.prefix + this.command, value: "Unspecified help" }];
+        return [{ name: this.client.bot.config.prefix + this.command, value: "Starts the application process for new members..." }];
     }
 }

@@ -2,13 +2,17 @@ import { Client } from "../api/client";
 import * as Discord from "discord.js";
 import { AbstractCommand } from "./AbstractCommand";
 import { HelpField } from "../..";
+import { DiscordEvent } from "../api/command";
 
 export class MissionCommand extends AbstractCommand {
     public command = "mission";
-    public aliases: string[] = [];
+    public aliases: string[] = ['objectives'];
+
+    
 
     constructor(client: Client) {
         super(client);
+        this.listeners.push({eventName:'message', callback:'onMessage'});
     }
 
     run(message: Discord.Message): void {

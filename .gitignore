@@ -13,3 +13,4 @@ tmp/**
 package-lock.json
 build-win.sh
 build-win.bat
+*.code-workspace

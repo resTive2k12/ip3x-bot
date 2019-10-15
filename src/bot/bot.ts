@@ -4,6 +4,7 @@ import Enmap from "enmap";
 import { Client } from "./api/client";
 import { BotConfig } from "./api/botconfig";
 import { Command } from "./api/command";
+import { AbstractCommand } from "./commands/AbstractCommand";
 
 export class Bot {
     private botId: string | null = null;
@@ -43,7 +44,7 @@ export class Bot {
                 const eventName = file.split(".")[0];
                 this.events.set(eventName, event);
                 this.logger.debug(`Attempting to load event '${eventName}'`);
-                this.discordClient.on(eventName, event.default.bind(null, this.discordClient));
+                this.discordClient.on(eventName, event.default.bind(this, this.discordClient));
             });
         });
     }
@@ -59,7 +60,8 @@ export class Bot {
                 const command = (await import(`./commands/${file}`)) as any;
                 if (command) {
                     const ctor = Object.keys(command)[0];
-                    const instance = new command[ctor](this.discordClient);
+                    const instance = new command[ctor](this.discordClient) as AbstractCommand; 
+                    instance.initializeListeners(this.discordClient);                   
                     this.commands.push(instance);
                 }
             });
