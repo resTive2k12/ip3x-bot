@@ -1,5 +1,5 @@
 import * as discord from "discord.js";
-import * as fs from "fs";
+import * as fs from 'fs';
 import Enmap from "enmap";
 import { Client } from "./api/client";
 import { BotConfig } from "./api/botconfig";
@@ -61,7 +61,11 @@ export class Bot {
                 if (command) {
                     const ctor = Object.keys(command)[0];
                     const instance = new command[ctor](this.discordClient) as AbstractCommand; 
-                    instance.initializeListeners(this.discordClient);                   
+                    if (instance.initializeListeners) {
+                        instance.initializeListeners(this.discordClient);                   
+                    } else {
+                        console.error(`${commandName} has no listeners configured...`);
+                    }
                     this.commands.push(instance);
                 }
             });

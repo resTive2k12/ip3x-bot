@@ -1,4 +1,4 @@
-import { DiscordEvent } from "./command";
+import { DiscordEvent } from "../api/command";
 
 export class DiscordEvents {
     static readonly MESSAGE: DiscordEvent = {eventName:'message', callback:'onMessage'};

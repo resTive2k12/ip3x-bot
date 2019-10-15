@@ -1,7 +1,7 @@
-import { Client } from "../api/client";
+import { Client } from "../../api/client";
 import * as Discord from "discord.js";
-import { AbstractCommand } from "./AbstractCommand";
-import { HelpField } from "../..";
+import { AbstractCommand } from "../AbstractCommand";
+import { HelpField } from "../../..";
 
 export class WelcomeCommand extends AbstractCommand {
     public command = "welcome";

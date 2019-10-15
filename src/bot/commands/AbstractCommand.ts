@@ -5,6 +5,7 @@ import { HelpField } from "../..";
 import { DB } from "../../utilities/Datastore";
 
 export abstract class AbstractCommand implements Command {
+ 
     prototype?: object | undefined;
 
     public command = "primary command name";
@@ -39,6 +40,32 @@ export abstract class AbstractCommand implements Command {
         return cmd === prefix + this.command || !!this.aliases.find(alias => cmd === prefix + alias);
     }
 
+    isAdmin(message: Discord.Message): boolean {
+        if (!message.member) {
+            console.warn(`Message author ${message.author.username} is not a member of the server (anymore)`);
+            return false;
+        }
+
+        const allowedRoles = [];
+        allowedRoles.push(message.guild.roles.find(role => role.id === '617647181285031947'));
+        allowedRoles.push(message.guild.roles.find(role => role.id === '451688525306265600'));
+
+        let hasAdminRole = false;
+
+        allowedRoles.forEach(role => {
+            //in roles or user === semtex
+            if (role && message.member.roles.get(role.id) || message.member.user.id === '452159417715261445' ) {
+                hasAdminRole = true;
+            }
+        }); 
+        
+        if (!hasAdminRole) {
+            message.channel.send(`${message.member} you are not allowed to perform administrative actions.`);
+            return false;
+        }
+        return true;
+    }
+
     initializeListeners(client: Client): void {
         if (!this.listeners || this.listeners.length === 0) {
             return;
@@ -52,21 +79,28 @@ export abstract class AbstractCommand implements Command {
                 return;
             }
             listeningTo.push(event.callback);
-            client.on(event.eventName, (this as any)[event.callback].bind(this, client));
+            client.on(event.eventName, (this as any)[event.callback].bind(this));
         });
         
-        console.debug(`${this.constructor.name} has no implementation for ${missing}.`);    
-        console.log(`${this.constructor.name} is listening to ${listeningTo}`);
+        if (missing.length > 0) console.debug(`${this.constructor.name} has no implementation for ${missing}.`);    
+        console.log(`${this.constructor.name} is listening to ${listeningTo.length > 0 ? listeningTo: 'nothing'}.`);
 
     }
 
+    protected getUserFromMention(mention: string):Discord.User | undefined {
+        // The id is the first and only match found by the RegEx.
+        const matches = mention.match(/^<@!?(\d+)>$/);
 
+        // If supplied variable was not a mention, matches will be null instead of an array.
+        if (!matches) return undefined;
 
+        // However the first element in the matches array will be the entire mention, not just the ID,
+        // so use index 1.
+        const id = matches[1];
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    run(message: Discord.Message, args?: string[] | undefined): void {
-        //nothing to do here
+        return this.client.users.get(id);
     }
+   
 
     help(): HelpField[] {
         return [{ name: this.client.bot.config.prefix + this.command, value: "Unspecified help" }];
@@ -83,5 +117,9 @@ export abstract class AbstractCommand implements Command {
             }
         } while (m);
         return args;
+    }
+
+    run(message: Discord.Message, args?: string[] | undefined): void {
+        //throw new Error("Method not implemented.");
     }
 }

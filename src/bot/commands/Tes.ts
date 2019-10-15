@@ -3,7 +3,7 @@ import { Client } from "../api/client";
 import { HelpField } from "../..";
 import { DB } from "../../utilities/Datastore";
 import { AbstractCommand } from "./AbstractCommand";
-import { DiscordEvents } from "./DiscordEvents";
+import { DiscordEvents } from "../core/DiscordEvents";
 
 export class Tests extends AbstractCommand {
     prototype?: object | undefined;
@@ -27,7 +27,7 @@ export class Tests extends AbstractCommand {
      */
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     onMessage(client: Client, message: Discord.Message): void {
-        throw new Error("not implemented yet");
+        //nothing to do here
     };
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
