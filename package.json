@@ -1,57 +1,59 @@
 {
-    "name": "ip3x-bot",
-    "version": "0.1.0",
-    "description": "Assistance Bot for the ELite: Dangerous Squadron IP3X",
-    "main": "index.js",
-    "scripts": {
-        "start": "npm run build:live",
-        "clean": "rm -rf build/",
-        "copy-images": "cpx images/**/*.* build/images",
-        "copy-sources": "cpx \"src/**/*.ts\" build && cpx src/tsconfig.json build",
-        "build": "npm run clean && npm run copy-images && npm run copy-sources",
-        "build:js": "npm run clean && tsc --build  ",
-        "docker": "npm run build && docker build -t thorstenst/ip3x-bot .",
-        "build:live": "npx nodemon --watch src -e ts,tsx --exec \"npx ts-node src/index.ts\"",
-        "test": "mocha -r ts-node/register test/**/*.ts"
-    },
-    "author": "",
-    "license": "ISC",
-    "dependencies": {
-        "@types/deep-diff": "^1.0.0",
-        "deep-diff": "^1.0.2",
-        "discord.js": "^11.5.1",
-        "enmap": "^5.1.2",
-        "fs": "0.0.1-security",
-        "googleapis": "^43.0.0",
-        "nedb": "^1.8.0",
-        "request": "^2.88.0",
-        "ts-node": "^8.4.1",
-        "typescript": "^3.6.3",
-        "winston": "^3.2.1",
-        "zeromq": "^5.1.0",
-        "zlib": "^1.0.5"
-    },
-    "devDependencies": {
-        "@types/chai": "^4.2.3",
-        "@types/mocha": "^5.2.7",
-        "@types/nedb": "^1.8.9",
-        "@types/node": "^12.7.12",
-        "@types/request": "^2.48.3",
-        "@typescript-eslint/eslint-plugin": "^2.3.2",
-        "@typescript-eslint/parser": "^2.3.2",
-        "chai": "^4.2.0",
-        "cpx": "^1.5.0",
-        "cross-env": "^6.0.3",
-        "eslint": "^6.5.1",
-        "mocha": "^6.2.1",
-        "nodemon": "^1.19.3"
-    },
-    "nodemonConfig": {
-        "verbose": false,
-        "ignore": [
-            "test/*",
-            "docs/*"
-        ],
-        "delay": "1000"
-    }
+  "name": "ip3x-bot",
+  "version": "0.1.0",
+  "description": "Assistance Bot for the ELite: Dangerous Squadron IP3X",
+  "main": "index.js",
+  "scripts": {
+    "start": "npm run build:live",
+    "clean": "rm -rf build/",
+    "copy-images": "cpx images/**/*.* build/images",
+    "copy-sources": "cpx \"src/**/*.ts\" build && cpx src/tsconfig.json build",
+    "build": "npm run clean && npm run copy-images && npm run copy-sources",
+    "build:js": "npm run clean && tsc --build  ",
+    "docker": "npm run build && docker build -t thorstenst/ip3x-bot .",
+    "build:live": "nodemon --watch src -e ts,tsx --exec \"npx ts-node src/index.ts\"",
+    "test": "mocha -r ts-node/register test/**/*.ts"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/deep-diff": "^1.0.0",
+    "@types/json-stringify-safe": "^5.0.0",
+    "deep-diff": "^1.0.2",
+    "discord.js": "^11.5.1",
+    "enmap": "^5.1.2",
+    "fs": "0.0.1-security",
+    "googleapis": "^43.0.0",
+    "json-stringify-safe": "^5.0.1",
+    "nedb": "^1.8.0",
+    "request": "^2.88.0",
+    "ts-node": "^8.4.1",
+    "typescript": "^3.6.3",
+    "winston": "^3.2.1",
+    "zeromq": "^5.1.0",
+    "zlib": "^1.0.5"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.2.3",
+    "@types/mocha": "^5.2.7",
+    "@types/nedb": "^1.8.9",
+    "@types/node": "^12.7.12",
+    "@types/request": "^2.48.3",
+    "@typescript-eslint/eslint-plugin": "^2.3.2",
+    "@typescript-eslint/parser": "^2.3.2",
+    "chai": "^4.2.0",
+    "cpx": "^1.5.0",
+    "cross-env": "^6.0.3",
+    "eslint": "^6.5.1",
+    "mocha": "^6.2.1",
+    "nodemon": "^1.19.3"
+  },
+  "nodemonConfig": {
+    "verbose": false,
+    "ignore": [
+      "test/*",
+      "docs/*"
+    ],
+    "delay": "1000"
+  }
 }

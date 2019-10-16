@@ -3,23 +3,25 @@ import { HelpField } from "../..";
 import { Client } from "./client";
 
 export interface Command {
-    prototype?: object;
-    
-    command: string;
-    aliases: string[];
-    botMentionMandatory: boolean;
+  prototype?: object;
 
-    run(message: Discord.Message, args?: string[]): void;
-    help(): HelpField[];
-    matches(args: string[]): boolean;
+  command: string;
+  aliases: string[];
+  requiresBotMention: boolean;
+  requiresPrefix: boolean;
+  requiresAdminAccess: boolean;
+  botAllowed: boolean;
+  requiresGuild: boolean;
+
+  help(): HelpField[];
+  matches(message: Discord.Message): Promise<boolean>;
 }
 
 export interface CommandBuilder {
-    new(client: Client): Command;
+  new(client: Client): Command;
 }
 
 export interface DiscordEvent {
-    eventName: string;
-    callback: string;
+  eventName: string;
+  callback: string;
 }
-

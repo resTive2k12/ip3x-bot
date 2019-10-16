@@ -11,9 +11,18 @@
     }
   },
   "rules": {
-    "semi": "error",
-    "max-len": ["error", { "code": 256, "tabWidth": 4 }],
+    "max-len": [
+      "error",
+      {
+        "code": 256,
+        "tabWidth": 4
+      }
+    ],
     "@typescript-eslint/explicit-function-return-type": "error",
-    "@typescript-eslint/no-explicit-any": "off"
+    "@typescript-eslint/no-explicit-any": "off",
+    "semi": "off",
+    "@typescript-eslint/semi": [
+      "error"
+    ]
   }
 }
