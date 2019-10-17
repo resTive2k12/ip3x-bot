@@ -5,6 +5,8 @@ import { Client } from "./api/client";
 import { BotConfig } from "./api/botconfig";
 import { Command } from "./api/command";
 import { AbstractCommand } from "./commands/AbstractCommand";
+import { AbstractController } from "./controllers/AbstractController";
+import { Controller } from "./api/controller";
 
 export class Bot {
   private botId: string | null = null;
@@ -12,6 +14,7 @@ export class Bot {
 
   public config: BotConfig;
   public commands: Command[];
+  public controllers: Controller[];
   public events: Enmap;
 
   public logger = console;
@@ -21,12 +24,14 @@ export class Bot {
     this.discordClient = new discord.Client() as Client;
     this.discordClient.bot = this;
     this.commands = [];
+    this.controllers = [];
     this.events = new Enmap();
   }
 
   start(): void {
     this.loadEvents();
     this.instantiateCommands();
+    this.instantiateControllers();
     this.discordClient.login(this.config.token).catch(error => console.error("Error logging in the bot", error));
     this.discordClient.on("ready", this.onReady.bind(this));
   }
@@ -62,11 +67,34 @@ export class Bot {
           const ctor = Object.keys(command)[0];
           const instance = new command[ctor](this.discordClient) as AbstractCommand;
           if (instance.initializeListeners) {
-            instance.initializeListeners(this.discordClient);
+            instance.initializeListeners();
           } else {
             console.error(`${commandName} has no listeners configured...`);
           }
           this.commands.push(instance);
+        }
+      });
+    });
+  }
+
+  instantiateControllers(): void {
+    fs.readdir(__dirname + "/controllers/", (err, files) => {
+      if (err) return console.error(err);
+      files.forEach(async file => {
+        if (!file.endsWith(".js") && !file.endsWith(".ts")) return;
+        const controllerName = file.split(".")[0];
+        if (controllerName.startsWith("Abstract")) return;
+        this.logger.debug(`Attempting to load controller ${controllerName}`);
+        const controller = (await import(`./controllers/${file}`)) as any;
+        if (controller) {
+          const ctor = Object.keys(controller)[0];
+          const instance = new controller[ctor](this.discordClient) as AbstractController;
+          if (instance.initializeListeners) {
+            instance.initializeListeners();
+          } else {
+            console.error(`${controllerName} has no listeners configured...`);
+          }
+          this.controllers.push(instance);
         }
       });
     });
