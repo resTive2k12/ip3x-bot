@@ -99,7 +99,7 @@ export abstract class AbstractCommand implements Command {
     return isAdmin;
   }
 
-  initializeListeners(client: Client): void {
+  initializeListeners(): void {
     if (!this.listeners || this.listeners.length === 0) {
       return;
     }
@@ -112,7 +112,7 @@ export abstract class AbstractCommand implements Command {
         return;
       }
       listeningTo.push(event.callback);
-      client.on(event.eventName, (this as any)[event.callback].bind(this));
+      this.client.on(event.eventName, (this as any)[event.callback].bind(this));
     });
 
     if (missing.length > 0) console.debug(`${this.constructor.name} has no implementation for ${missing}.`);
