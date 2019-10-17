@@ -1,17 +1,16 @@
-import { Client } from "../api/client";
-import * as Discord from "discord.js";
-import { HelpField } from "../..";
-import { AbstractCommand } from "./AbstractCommand";
-import { DiscordEvents } from "../core/DiscordEvents";
-import { AdminRoles } from "../api/storage";
+import { Client } from '../api/client';
+import * as Discord from 'discord.js';
+import { HelpField } from '../..';
+import { AbstractCommand } from './AbstractCommand';
+import { DiscordEvents } from '../core/DiscordEvents';
+import { AdminRoles } from '../api/storage';
 
 export class RemoveAdmin extends AbstractCommand {
-  public command = "remove-admin";
+  public command = 'remove-admin';
   public aliases: string[] = [];
   public requiresBotMention = true;
   public requiresAdminAccess = true;
   public botAllowed = false;
-
 
   constructor(client: Client) {
     super(client);
@@ -43,15 +42,25 @@ export class RemoveAdmin extends AbstractCommand {
       }
     });
     entry.adminRoles = roles;
-    this.db.update(entry).then(entry => {
-      message.channel.send('Successfully removed.');
-    }).catch(rejected => {
-      message.channel.send('Failed to remove access. Check protocol.');
-      console.error("Error saving removed admin access: ", rejected);
-    });
+    this.db
+      .update(entry)
+      .then(entry => {
+        message.channel.send('Successfully removed.');
+      })
+      .catch(rejected => {
+        message.channel.send('Failed to remove access. Check protocol.');
+        console.error('Error saving removed admin access: ', rejected);
+      });
   }
 
   help(): HelpField[] {
-    return [{ name: "!help", value: "Just a list of all commands. Use @IP3X Assistant !help <command name> for more detailed information." }];
+    return [
+      {
+        name: 'add-admin',
+        value:
+          'The mentions of users and users are removed from the group of users who can change the settings. Mentions of channels will be silently ignored.' +
+          '\n\n**Usage**: ```@IP3X-Assistant remove-admin [@role...] [@user...]```'
+      }
+    ];
   }
 }

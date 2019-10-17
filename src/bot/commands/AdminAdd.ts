@@ -19,7 +19,6 @@ export class AddAdmin extends AbstractCommand {
     this.listeners.push(DiscordEvents.MESSAGE);
   }
 
-  @log
   async onMessage(message: Discord.Message): Promise<void> {
     const matches = await this.matches(message);
     if (!matches) {
@@ -56,6 +55,6 @@ export class AddAdmin extends AbstractCommand {
   }
 
   help(): HelpField[] {
-    return [{ name: "!help", value: "Just a list of all commands. Use @IP3X Assistant !help <command name> for more detailed information." }];
+    return [{ name: "add-admin", value: "The mentions of users and users are added to the group of users who can change the settings. Mentions of channels will be silently ignored.\n\n**Usage**: ```@IP3X-Assistant add-admin [@role...] [@user...]```" }];
   }
 }
