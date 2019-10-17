@@ -1,8 +1,7 @@
-import * as Discord from "discord.js";
-import { Bot } from "./bot/bot";
-import config from "./config/config.json";
-import { DB } from "./utilities/Datastore";
-import { BotConfig } from "./bot/api/botconfig";
+import { Bot } from './bot/bot';
+import config from './config/config.json';
+import { DB } from './utilities/Datastore';
+import { BotConfig } from './bot/api/botconfig';
 
 export interface HelpField {
   name: string;
@@ -11,7 +10,7 @@ export interface HelpField {
 }
 
 const botConfig: BotConfig = {
-  db: new DB("datastore/config.store"),
+  db: new DB('datastore/config.store'),
   token: config.token,
   prefix: config.prefix,
   // eslint-disable-next-line @typescript-eslint/camelcase
@@ -19,4 +18,4 @@ const botConfig: BotConfig = {
 };
 
 new Bot(botConfig).start();
-console.log("main thread finished...");
+console.log('main thread finished...');
