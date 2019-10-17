@@ -11,6 +11,7 @@ export class Tests extends AbstractCommand {
   public command = "primary command name";
   public aliases: string[] = ["some alias"];
   public requiresBotMention = false;
+  public applyHelp = false;
 
 
   constructor(client: Client) {

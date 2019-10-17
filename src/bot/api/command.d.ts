@@ -12,6 +12,7 @@ export interface Command {
   requiresAdminAccess: boolean;
   botAllowed: boolean;
   requiresGuild: boolean;
+  applyHelp: boolean;
 
   help(): HelpField[];
   matches(message: Discord.Message): Promise<boolean>;

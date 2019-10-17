@@ -15,6 +15,7 @@ export abstract class AbstractCommand implements Command {
   public requiresAdminAccess = false;
   public botAllowed = false;
   public requiresGuild = true;
+  public applyHelp = true;
 
 
   public client: Client;
