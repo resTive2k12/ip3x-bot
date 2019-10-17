@@ -27,48 +27,15 @@ export class MissionSync extends AbstractCommand {
     this.synchronize(message);
   }
 
-  showMission(message: Discord.Message): void {
-    if (!message.guild) {
-      message.channel.send(`${message.author} Make sure, you are not sending this in a direct message.`);
-      return;
-    }
-    this.db
-      .fetch(message.guild.id)
-      .then(doc => {
-        if (!doc || !doc.mission || doc.mission.objectives.length === 0) {
-          message.channel.send(`:information_source: ${message.member} there are currently no objectives!`);
-        } else {
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          const embed = new Discord.RichEmbed();
-          embed.setTitle(doc.mission.title);
-          embed.setDescription(doc.mission.description || "");
-          embed.attachFiles(["./images/logo-90-90.png"]);
-          embed.setAuthor("IP3X Command", "attachment://logo-90-90.png");
-          embed.setColor(0x00ff00);
-          embed.setTimestamp(doc.mission.lastSync);
-
-          doc.mission.objectives.forEach(objective => {
-            embed.addField(`${objective.title}`, `${objective.description}`);
-          });
-          message.channel.send(embed);
-        }
-      })
-      .catch(reason => {
-        console.log("Error loading data", reason);
-        message.channel.send(`${message.author} Error loading mission objectives. Check protocol..`);
-      });
-  }
-
   private synchronize(message: Discord.Message): void {
-    message.channel.send("Snychronizing mission objectives: authenticating", {}).then(message => {
+    message.channel.send("Synchronizing mission objectives: authenticating", {}).then(message => {
       if (message instanceof Discord.Message) {
         GoogleSheets.auth(this.client.bot.config.credentials).then(
           succ => {
-            message.edit("Snychronizing mission objectives: authenticated");
+            message.edit("Synchronizing mission objectives: authenticated");
             const request = {
               // The ID of the spreadsheet to retrieve data from.
               spreadsheetId: "1AS0CYbHhMTYO9ogqE8Pxn6N7DJBVPsiAJW05E-K5Uuw", // TODO: Update placeholder value.
-
               // The A1 notation of the values to retrieve.
               range: "IP3X Assistant Config!A6:C18", // TODO: Update placeholder value.
 
@@ -101,7 +68,7 @@ export class MissionSync extends AbstractCommand {
             });
           },
           err => {
-            message.edit("Snychronizing mission objectives: authentication failed...");
+            message.edit("Synchronizing mission objectives: authentication failed...");
             console.error("auth error", err);
           }
         );
@@ -111,6 +78,6 @@ export class MissionSync extends AbstractCommand {
   }
 
   help(): HelpField[] {
-    return [{ name: "!mission", value: "Shows the current active objectives.", inline: false }];
+    return [{ name: "mission-sync", value: "Updates the current objectives.", inline: false }];
   }
 }
