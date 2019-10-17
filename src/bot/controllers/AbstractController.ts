@@ -30,6 +30,5 @@ export abstract class AbstractController implements Controller {
 
     if (missing.length > 0) console.debug(`${this.constructor.name} has no implementation for ${missing}.`);
     console.log(`${this.constructor.name} is listening to ${listeningTo.length > 0 ? listeningTo : 'nothing'}.`);
-
   }
 }

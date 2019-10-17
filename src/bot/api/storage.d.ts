@@ -11,6 +11,9 @@ export interface GuildEntry {
    * @see {Discord.Role#id} */
   adminRoles?: AdminRoles[];
 
+  /** List of known users in that guild (Discord.GuildMember) */
+  users?: User[];
+
   /** Time if the las update of this dataset. */
   lastUpdate: number;
 }
@@ -39,4 +42,12 @@ export interface MissionEntry {
   objectives: ObjectiveEntry[];
   /** Timestamp of last sync. */
   lastSync: number;
+}
+
+export interface User {
+  id: string;
+  name: string;
+
+  joinedAt: Date;
+  leftAt?: Date;
 }

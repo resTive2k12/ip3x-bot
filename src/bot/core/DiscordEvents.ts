@@ -16,6 +16,7 @@ export class DiscordEvents {
 
 
   static readonly GUILD_MEMBER_ADD: DiscordEvent = { eventName: 'guildMemberAdd', callback: 'onGuildMemberAdd' };
+  static readonly GUILD_MEMBER_REMOVE: DiscordEvent = { eventName: 'guildMemberAdd', callback: 'onGuildMemberRemove' };
 
   private constructor(private readonly event: string, public readonly callback: string) {
     //empty

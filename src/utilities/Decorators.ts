@@ -13,3 +13,16 @@ export function log(target: Record<string, any>, key: string, descriptor: TypedP
 
   return descriptor;
 }
+
+export function debug(target: Record<string, any>, key: string, descriptor: TypedPropertyDescriptor<any>): TypedPropertyDescriptor<any> {
+  const originalMethod = descriptor.value;
+
+  descriptor.value = function (...args: any[]): any {
+    console.debug('>>>>>>>>>>>>>>>>>> ' + originalMethod.name);
+    const result = originalMethod.apply(this, args);
+    console.debug('<<<<<<<<<<<<<<<<<< ' + originalMethod.name);
+    return result;
+  };
+
+  return descriptor;
+}
