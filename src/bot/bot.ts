@@ -15,7 +15,6 @@ export class Bot {
   public config: BotConfig;
   public commands: Command[];
   public controllers: Controller[];
-  public events: Enmap;
 
   public logger = console;
 
@@ -25,11 +24,9 @@ export class Bot {
     this.discordClient.bot = this;
     this.commands = [];
     this.controllers = [];
-    this.events = new Enmap();
   }
 
   start(): void {
-    this.loadEvents();
     this.instantiateCommands();
     this.instantiateControllers();
     this.discordClient.login(this.config.token).catch(error => console.error("Error logging in the bot", error));
@@ -37,22 +34,9 @@ export class Bot {
   }
 
   onReady(): void {
-    this.logger.info(`Bot is ready.\n\t ${this.commands.length} known commands.\n\t listening to ${this.events.size} events (${this.events.keyArray()}).`);
+    this.logger.info(`Bot is ready.\n\t ${this.commands.length} known commands.`);
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-  loadEvents(): void {
-    fs.readdir(__dirname + "/events/", (err, files) => {
-      if (err) return console.error(err);
-      files.forEach(async file => {
-        const event = await import(`./events/${file}`);
-        const eventName = file.split(".")[0];
-        this.events.set(eventName, event);
-        this.logger.debug(`Attempting to load event '${eventName}'`);
-        this.discordClient.on(eventName, event.default.bind(this, this.discordClient));
-      });
-    });
-  }
 
   instantiateCommands(): void {
     fs.readdir(__dirname + "/commands/", (err, files) => {
