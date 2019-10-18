@@ -1,10 +1,9 @@
-import { Client } from "../api/client";
-import { AbstractController } from "./AbstractController";
-import { DiscordEvents } from "../core/DiscordEvents";
-import { debug } from "../../utilities/Decorators";
+import { Client } from '../api/client';
+import { AbstractController } from './AbstractController';
+import { DiscordEvents } from '../core/DiscordEvents';
+import { debug } from '../../utilities/Decorators';
 
 export class MemberController extends AbstractController {
-
   constructor(client: Client) {
     super(client);
     this.listeners.push(DiscordEvents.READY);
@@ -12,7 +11,6 @@ export class MemberController extends AbstractController {
     this.listeners.push(DiscordEvents.GUILD_MEMBER_REMOVE);
   }
 
-  @debug
   onReady(): void {
     const db = this.client.bot.config.db;
 
@@ -30,7 +28,5 @@ export class MemberController extends AbstractController {
       entry.users = users;
       db.update(entry);
     });
-
-
   }
 }

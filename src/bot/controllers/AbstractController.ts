@@ -1,9 +1,8 @@
-import { Controller } from "../api/controller";
-import { DiscordEvent } from "../api/command";
-import { Client } from "../api/client";
+import { Controller } from '../api/controller';
+import { DiscordEvent } from '../api/command';
+import { Client } from '../api/client';
 
 export abstract class AbstractController implements Controller {
-
   protected client: Client;
 
   protected listeners: DiscordEvent[] = [];
@@ -30,5 +29,9 @@ export abstract class AbstractController implements Controller {
 
     if (missing.length > 0) console.debug(`${this.constructor.name} has no implementation for ${missing}.`);
     console.log(`${this.constructor.name} is listening to ${listeningTo.length > 0 ? listeningTo : 'nothing'}.`);
+  }
+
+  onReady(): void | Promise<void> {
+    //empty Wrapper implementation
   }
 }
