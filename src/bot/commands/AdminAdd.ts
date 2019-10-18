@@ -45,7 +45,7 @@ export class AddAdmin extends AbstractCommand {
       }
     });
     entry.adminRoles = roles;
-    this.db.update(entry).then(entry => {
+    this.db.update(entry).then(() => {
       message.channel.send('Successfully added.');
     }).catch(rejected => {
       message.channel.send('Failed to add access. Check protocol.');

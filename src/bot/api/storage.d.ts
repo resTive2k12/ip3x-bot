@@ -50,4 +50,6 @@ export interface User {
 
   joinedAt: Date;
   leftAt?: Date;
+  isBot: boolean;
+  lastSeen?: Date;
 }
