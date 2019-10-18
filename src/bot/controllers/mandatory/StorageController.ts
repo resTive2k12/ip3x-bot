@@ -14,12 +14,12 @@ export class StorageController extends AbstractController {
     const guilds = this.client.guilds;
     for (let i = 0; i < guilds.array().length; i++) {
       const guild = guilds.array()[i];
-      await this.client.bot.config.db.fetch(guild.id).catch(() => {
+      await this.client.db.fetch(guild.id).catch(() => {
         const newGuild: GuildEntry = {
           _id: guild.id,
           lastUpdate: Date.now()
         };
-        this.client.bot.config.db.insert(newGuild);
+        this.client.db.insert(newGuild);
         console.log(`created new configuration entry for ${guild.name} [ID: ${guild.id}].`);
       });
     }

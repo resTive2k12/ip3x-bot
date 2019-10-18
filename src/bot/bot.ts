@@ -7,6 +7,7 @@ import { AbstractCommand } from './commands/AbstractCommand';
 import { AbstractController } from './controllers/AbstractController';
 import { Controller } from './api/controller';
 import { StorageController } from './controllers/mandatory/StorageController';
+import { DB } from '../utilities/Datastore';
 
 export class Bot {
   private botId: string | null = null;
@@ -24,6 +25,7 @@ export class Bot {
     this.discordClient.bot = this;
     this.commands = [];
     this.controllers = [];
+    this.discordClient.db = new DB('datastore/config.store');
   }
 
   start(): void {

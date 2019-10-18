@@ -4,7 +4,6 @@ import { HelpField } from "../..";
 import { AbstractCommand } from "./AbstractCommand";
 import { DiscordEvents } from "../core/DiscordEvents";
 import { AdminRoles } from "../api/storage";
-import { log } from "../../utilities/Decorators";
 
 export class AddAdmin extends AbstractCommand {
   public command = "add-admin";

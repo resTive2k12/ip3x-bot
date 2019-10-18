@@ -25,7 +25,7 @@ export abstract class AbstractCommand implements Command {
 
   constructor(client: Client) {
     this.client = client;
-    this.db = client.bot.config.db;
+    this.db = client.db;
   }
 
 

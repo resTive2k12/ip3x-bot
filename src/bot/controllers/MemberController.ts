@@ -1,7 +1,6 @@
 import { Client } from '../api/client';
 import { AbstractController } from './AbstractController';
 import { DiscordEvents } from '../core/DiscordEvents';
-import { debug } from '../../utilities/Decorators';
 
 export class MemberController extends AbstractController {
   constructor(client: Client) {
@@ -12,10 +11,8 @@ export class MemberController extends AbstractController {
   }
 
   onReady(): void {
-    const db = this.client.bot.config.db;
-
     this.client.guilds.forEach(async guild => {
-      const entry = await db.fetch(guild.id);
+      const entry = await this.client.db.fetch(guild.id);
       if (!entry) return;
       const users = entry.users || [];
       guild.members.forEach(member => {
@@ -26,7 +23,7 @@ export class MemberController extends AbstractController {
         }
       });
       entry.users = users;
-      db.update(entry);
+      this.client.db.update(entry);
     });
   }
 }

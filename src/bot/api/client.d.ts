@@ -1,6 +1,8 @@
 import { Bot } from "../bot";
 import * as Discord from "discord.js";
+import { DB } from "../../utilities/Datastore";
 
 export interface Client extends Discord.Client {
-    bot: Bot;
+  db: DB;
+  bot: Bot;
 }

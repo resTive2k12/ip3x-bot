@@ -1,6 +1,5 @@
 import { Bot } from './bot/bot';
 import config from './config/config.json';
-import { DB } from './utilities/Datastore';
 import { BotConfig } from './bot/api/botconfig';
 
 export interface HelpField {
@@ -10,7 +9,6 @@ export interface HelpField {
 }
 
 const botConfig: BotConfig = {
-  db: new DB('datastore/config.store'),
   token: config.token,
   prefix: config.prefix,
   // eslint-disable-next-line @typescript-eslint/camelcase
