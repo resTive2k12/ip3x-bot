@@ -1,22 +1,20 @@
-import { Command, DiscordEvent } from "../api/command";
-import * as Discord from "discord.js";
-import { Client } from "../api/client";
-import { HelpField } from "../..";
-import { DB } from "../../utilities/Datastore";
+import { Command, DiscordEvent } from '../api/command';
+import * as Discord from 'discord.js';
+import { Client } from '../api/client';
+import { HelpField } from '../..';
+import { DB } from '../../utilities/Datastore';
 
 export abstract class AbstractCommand implements Command {
-
   prototype?: object | undefined;
 
-  public command = "primary command name";
-  public aliases: string[] = ["some alias"];
+  public command = 'primary command name';
+  public aliases: string[] = ['some alias'];
   public requiresBotMention = false;
   public requiresPrefix = false;
   public requiresAdminAccess = false;
   public botAllowed = false;
   public requiresGuild = true;
   public applyHelp = true;
-
 
   public client: Client;
   protected db: DB;
@@ -28,8 +26,10 @@ export abstract class AbstractCommand implements Command {
     this.db = client.db;
   }
 
-
   public async matches(message: Discord.Message): Promise<boolean> {
+    if (message.system) {
+      return false;
+    }
     const args = this.parseMessageIntoParameters(message);
 
     if (this.requiresGuild && !message.member) {
@@ -45,6 +45,7 @@ export abstract class AbstractCommand implements Command {
     const prefix = this.requiresPrefix ? this.client.bot.config.prefix : '';
 
     let cmd = args[0];
+    if (!cmd) return false;
     const botMention = cmd.match(/^<@!?(\d+)>$/) || [];
     const botIsMentioned = botMention.length != 0 && botMention[1] == this.client.user.id;
 
@@ -70,7 +71,6 @@ export abstract class AbstractCommand implements Command {
       console.error(`${this.constructor.name}#isAdmin needs a server member to check for rights.`);
       return false;
     }
-
 
     let isAdmin = false;
     //if user is superuser then no other check is required
@@ -117,7 +117,6 @@ export abstract class AbstractCommand implements Command {
 
     if (missing.length > 0) console.debug(`${this.constructor.name} has no implementation for ${missing}.`);
     console.log(`${this.constructor.name} is listening to ${listeningTo.length > 0 ? listeningTo : 'nothing'}.`);
-
   }
 
   protected getUserFromMention(mention: string): Discord.User | undefined {
@@ -134,9 +133,8 @@ export abstract class AbstractCommand implements Command {
     return this.client.users.get(id);
   }
 
-
   help(): HelpField[] {
-    return [{ name: this.client.bot.config.prefix + this.command, value: "Unspecified help" }];
+    return [{ name: this.client.bot.config.prefix + this.command, value: 'Unspecified help' }];
   }
 
   protected parseMessageIntoParameters(message: Discord.Message): string[] {
