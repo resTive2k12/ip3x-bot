@@ -26,7 +26,31 @@ export class MemberController extends AbstractController {
           users.set(member.user.id, { id: member.user.id, name: member.user.username, joinedAt: member.joinedAt, isBot: member.user.bot });
           console.debug(`\t- Added new user ${member.nickname || member.user.username} ID: ${member.user.id}.`);
         } else {
-          console.debug(`\t- User ${member.nickname || member.user.username} [${member.user.id}] is present.`);
+          const user = users.get(member.id);
+          if (user && user.application) {
+            if (!user.application.finishedAt) {
+              console.debug(
+                `\t- User ${member.nickname || member.user.username} [${member.user.id}] is present and has a pending application (Step ${
+                  user.application.applicationStep
+                }).`
+              );
+              if (!this.client.users.get(user.id)!.dmChannel) {
+                this.client.users
+                  .get(user.id)!
+                  .createDM()
+                  .then(ch => {
+                    ch.fetchMessages();
+                  });
+              } else {
+                this.client.users.get(user.id)!.dmChannel.fetchMessages();
+              }
+              //(this.client.channels.get(user.application.dmChannelId) as Discord.DMChannel).fetchMessages();
+            } else {
+              console.debug(`\t- User ${member.nickname || member.user.username} [${member.user.id}] is present and has a finished application.`);
+            }
+          } else {
+            console.debug(`\t- User ${member.nickname || member.user.username} [${member.user.id}] is present.`);
+          }
         }
       });
       entry.users = MemberController.usersToArray(users);
@@ -38,7 +62,7 @@ export class MemberController extends AbstractController {
     const oldStatus = oldUser.presence.status;
     const newStatus = newUser.presence.status;
 
-    if (newStatus == 'offline' || newStatus == 'online' || newStatus == 'idle') {
+    if (newStatus != oldStatus) {
       this.client.db.fetch(newUser.guild.id).then(entry => {
         if (!entry.users) {
           console.trace('Users should be present here...');
@@ -67,16 +91,10 @@ export class MemberController extends AbstractController {
       users.set(newMember.user.id, { id: newMember.user.id, name: newMember.user.username, joinedAt: newMember.joinedAt, isBot: newMember.user.bot });
       console.debug(`Added new user ${newMember.nickname || newMember.user.username} [${newMember.user.id}].`);
       entry.users = MemberController.usersToArray(users);
-      this.client.db.update(entry).then(entry => {
+      this.client.db.update(entry).then(() => {
         if (newMember.guild.systemChannel instanceof Discord.TextChannel) {
           const channel = newMember.guild.systemChannel as Discord.TextChannel;
-          channel.send(
-            `Welcome ${newMember}!
-If you wish to join the Elite:Dangerous Squadron INTERPLANETARY 3XPEDITIONS use the **!join** command. 
-            
-Otherwise feel free to contact an admiral or officer directly.
-`
-          );
+          channel.send(MemberController.MSG_WELCOME(newMember));
         }
       });
     });
@@ -99,11 +117,19 @@ Otherwise feel free to contact an admiral or officer directly.
     });
   }
 
-  static usersToMap(users: User[]): Map<string, User> {
+  public static usersToMap(users: User[]): Map<string, User> {
     return new Map(users.map(e => [e.id, e]));
   }
 
-  static usersToArray(users: Map<string, User>): User[] {
+  public static usersToArray(users: Map<string, User>): User[] {
     return Array.from(users.values());
   }
+
+  public static MSG_WELCOME = (member: Discord.GuildMember): string => `Welcome to **IP3X Headquarters**, ${member}!
+
+If you’re looking to join our squadron, please type !join in this channel.
+
+Meanwhile, we direct you to the #welcome channel, which contains important information.
+
+_We hope you enjoy your stay_.`;
 }
