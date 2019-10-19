@@ -23,7 +23,6 @@ export interface AdminRoles {
   id: string;
 }
 
-
 /** A single mission objective. */
 export interface ObjectiveEntry {
   /** Title of the mission */
@@ -52,4 +51,13 @@ export interface User {
   leftAt?: Date;
   isBot: boolean;
   lastSeen?: Date;
+
+  application?: {
+    startAt: Date;
+    applicationStep: number;
+    finishedAt?: Date;
+    canceledAt?: Date;
+    dmChannelId: string;
+    msgId: string;
+  };
 }
