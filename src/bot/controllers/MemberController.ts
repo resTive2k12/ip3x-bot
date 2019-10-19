@@ -67,7 +67,14 @@ export class MemberController extends AbstractController {
       users.set(newMember.user.id, { id: newMember.user.id, name: newMember.user.username, joinedAt: newMember.joinedAt, isBot: newMember.user.bot });
       console.debug(`Added new user ${newMember.nickname || newMember.user.username} [${newMember.user.id}].`);
       entry.users = MemberController.usersToArray(users);
-      this.client.db.update(entry);
+      this.client.db.update(entry).then(entry => {
+        if (newMember.guild.systemChannel instanceof Discord.TextChannel) {
+          const channel = newMember.guild.systemChannel as Discord.TextChannel;
+          channel.send(
+            `Welcome ${newMember} ! If you wish to join the Elite:Dangerous Squadron INTERPLANETARY 3XPEDITIONS use the !join command. Otherwise feel free to contact an admiral or officer directly.`
+          );
+        }
+      });
     });
   }
 
