@@ -71,7 +71,11 @@ export class MemberController extends AbstractController {
         if (newMember.guild.systemChannel instanceof Discord.TextChannel) {
           const channel = newMember.guild.systemChannel as Discord.TextChannel;
           channel.send(
-            `Welcome ${newMember} ! If you wish to join the Elite:Dangerous Squadron INTERPLANETARY 3XPEDITIONS use the !join command. Otherwise feel free to contact an admiral or officer directly.`
+            `Welcome ${newMember}!
+If you wish to join the Elite:Dangerous Squadron INTERPLANETARY 3XPEDITIONS use the **!join** command. 
+            
+Otherwise feel free to contact an admiral or officer directly.
+`
           );
         }
       });
