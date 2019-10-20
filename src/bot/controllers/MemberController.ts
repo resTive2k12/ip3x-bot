@@ -95,6 +95,14 @@ export class MemberController extends AbstractController {
         if (newMember.guild.systemChannel instanceof Discord.TextChannel) {
           const channel = newMember.guild.systemChannel as Discord.TextChannel;
           channel.send(MemberController.MSG_WELCOME(newMember));
+          if (entry.notificationChannels) {
+            entry.notificationChannels.forEach(ch => {
+              const notify = this.client.channels.get(ch.id) as Discord.TextChannel;
+              if (notify) {
+                notify.send(`@here: ${newMember} just joined the server.`);
+              }
+            });
+          }
         }
       });
     });
@@ -111,8 +119,17 @@ export class MemberController extends AbstractController {
         user.lastSeen = user.leftAt;
         users.set(user.id, user);
         entry.users = MemberController.usersToArray(users);
-        this.client.db.update(entry);
-        console.debug(`Terminated left user ${member.nickname || member.user.username} [${member.user.id}].`);
+        this.client.db.update(entry).then(entry => {
+          if (entry.notificationChannels) {
+            entry.notificationChannels.forEach(ch => {
+              const notify = this.client.channels.get(ch.id) as Discord.TextChannel;
+              if (notify) {
+                notify.send(`@here: The user ${member} left the server. He had the roles: ${member.roles.map(role => role.name.slice(1)).join(', ')}`);
+              }
+            });
+          }
+          console.debug(`User ${member.nickname || member.user.username} [${member.user.id}] has left the server.`);
+        });
       }
     });
   }
