@@ -12,7 +12,8 @@ const botConfig: BotConfig = {
   token: config.token,
   prefix: config.prefix,
   // eslint-disable-next-line @typescript-eslint/camelcase
-  credentials: { client_email: config.credentials.client_email, private_key: config.credentials.private_key }
+  credentials: { client_email: config.credentials.client_email, private_key: config.credentials.private_key },
+  sheets: config.sheets
 };
 
 new Bot(botConfig).start();
