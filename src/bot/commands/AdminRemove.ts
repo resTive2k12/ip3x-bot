@@ -44,7 +44,7 @@ export class RemoveAdmin extends AbstractCommand {
     entry.adminRoles = roles;
     this.db
       .update(entry)
-      .then(entry => {
+      .then(() => {
         message.channel.send('Successfully removed.');
       })
       .catch(rejected => {
