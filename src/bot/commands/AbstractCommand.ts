@@ -33,12 +33,12 @@ export abstract class AbstractCommand implements Command {
     const args = this.parseMessageIntoParameters(message);
 
     if (this.requiresGuild && !message.member) {
-      console.debug(`${this.constructor.name} needs to be sent from a server. Direct messages are not allowed.`);
+      //console.debug(`${this.constructor.name} needs to be sent from a server. Direct messages are not allowed.`);
       return false;
     }
 
     if (message.author && message.author.bot && !this.botAllowed) {
-      console.debug(`${this.constructor.name} does not work with bot messages.`);
+      //console.debug(`${this.constructor.name} does not work with bot messages.`);
       return false;
     }
 
