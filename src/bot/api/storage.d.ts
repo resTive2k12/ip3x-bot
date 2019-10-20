@@ -48,6 +48,11 @@ export interface MissionEntry {
   lastSync: number;
 }
 
+export type Notification = 'Yes' | 'No' | 'Ignore' | 'Bot';
+export type NotChecked = 'Not checked';
+export type Validation = Notification | NotChecked;
+export type ApplicationStep = 'Error' | 'Started' | 'In Progress' | 'Finished' | 'Ignore' | 'Cancelled';
+
 export interface User {
   id: string;
   name: string;
@@ -56,13 +61,17 @@ export interface User {
   leftAt?: Date;
   isBot: boolean;
   lastSeen?: Date;
-
+  comment?: string;
+  onInara: Validation;
+  inaraName?: string;
+  inSquadron: Validation;
+  notified: Notification;
   application?: {
     startAt: Date;
-    applicationStep: number;
+    step: ApplicationStep;
     finishedAt?: Date;
     canceledAt?: Date;
-    dmChannelId: string;
-    msgId: string;
+    dmChannelId?: string;
+    msgId?: string;
   };
 }

@@ -3,6 +3,10 @@ import { AbstractController } from './AbstractController';
 import { DiscordEvents } from '../core/DiscordEvents';
 import * as Discord from 'discord.js';
 import { User } from '../api/storage';
+import { GoogleSheets } from '../../utilities/GoogleSheets';
+import { Sheet } from '../api/botconfig';
+import { formatDate } from '../../utilities/Utilities';
+import { DB } from '../../utilities/Datastore';
 
 export class MemberController extends AbstractController {
   constructor(client: Client) {
@@ -18,12 +22,34 @@ export class MemberController extends AbstractController {
       const entry = await this.client.db.fetch(guild.id);
       if (!entry) return;
       if (!entry.users) entry.users = [];
-      const users = MemberController.usersToMap(entry.users);
+      const users = DB.usersToMap(entry.users);
       console.debug(`Checking guild ${guild.name} [${guild.id}]...`);
       guild.members.forEach(member => {
         const userIsKnown = users.size > 0 && !!users.get(member.id);
         if (!userIsKnown) {
-          users.set(member.user.id, { id: member.user.id, name: member.user.username, joinedAt: member.joinedAt, isBot: member.user.bot });
+          const newUser: User = {
+            id: member.user.id,
+            name: member.nickname || member.user.username,
+            joinedAt: member.joinedAt,
+            isBot: member.user.bot,
+            onInara: member.user.bot ? 'Bot' : 'Not checked',
+            inSquadron: member.user.bot ? 'Bot' : 'Not checked',
+            inaraName: member.nickname || member.user.username,
+            notified: member.user.bot ? 'Bot' : 'Ignore',
+            comment: member.user.bot
+              ? 'This user is identified as a bot. No interaction required nor advisable.'
+              : 'First startup. Entry needs to be manually completed.'
+          };
+          if (!member.user.bot) {
+            newUser.application = {
+              startAt: new Date(0),
+              finishedAt: new Date(0),
+              step: 'Ignore',
+              msgId: undefined,
+              dmChannelId: undefined
+            };
+          }
+          users.set(member.user.id, newUser);
           console.debug(`\t- Added new user ${member.nickname || member.user.username} ID: ${member.user.id}.`);
         } else {
           const user = users.get(member.id);
@@ -31,18 +57,18 @@ export class MemberController extends AbstractController {
             if (!user.application.finishedAt) {
               console.debug(
                 `\t- User ${member.nickname || member.user.username} [${member.user.id}] is present and has a pending application (Step ${
-                  user.application.applicationStep
+                  user.application.step
                 }).`
               );
-              if (!this.client.users.get(user.id)!.dmChannel) {
-                this.client.users
-                  .get(user.id)!
-                  .createDM()
-                  .then(ch => {
+              const discordUser = this.client.users.get(user.id);
+              if (discordUser && !discordUser.bot) {
+                if (!discordUser.dmChannel) {
+                  discordUser.createDM().then(ch => {
                     ch.fetchMessages();
                   });
-              } else {
-                this.client.users.get(user.id)!.dmChannel.fetchMessages();
+                } else {
+                  discordUser.dmChannel.fetchMessages();
+                }
               }
               //(this.client.channels.get(user.application.dmChannelId) as Discord.DMChannel).fetchMessages();
             } else {
@@ -53,7 +79,10 @@ export class MemberController extends AbstractController {
           }
         }
       });
-      entry.users = MemberController.usersToArray(users);
+      entry.users = DB.usersToArray(users);
+      if (this.client.bot.config.sheets.members.guildId == guild.id) {
+        this.syncSheet(this.client.bot.config.sheets.members, entry.users);
+      }
       this.client.db.update(entry);
     });
   }
@@ -68,38 +97,45 @@ export class MemberController extends AbstractController {
           console.trace('Users should be present here...');
           return;
         }
-        const users = MemberController.usersToMap(entry.users);
+        const users = DB.usersToMap(entry.users);
         const user = users.get(newUser.id);
         if (!user) {
-          console.trace(`User "${newUser.nickname || newUser.user.username}" [${newUser.id}] should be present here...`);
+          //might happen if a new user joined
           return;
         }
         user.lastSeen = new Date();
         users.set(newUser.id, user);
         console.debug(`Updated users ${newUser.nickname || newUser.user.username} [${newUser.user.id}] presence from ${oldStatus} to ${newStatus}.`);
-        entry.users = MemberController.usersToArray(users);
+        entry.users = DB.usersToArray(users);
+
         this.client.db.update(entry);
       });
     }
   }
 
   onGuildMemberAdd(newMember: Discord.GuildMember): void {
-    this.client.db.fetch(newMember.guild.id).then(entry => {
-      if (!entry) return;
-      if (!entry.users) entry.users = [];
-      const users = MemberController.usersToMap(entry.users);
-      users.set(newMember.user.id, { id: newMember.user.id, name: newMember.user.username, joinedAt: newMember.joinedAt, isBot: newMember.user.bot });
-      console.debug(`Added new user ${newMember.nickname || newMember.user.username} [${newMember.user.id}].`);
-      entry.users = MemberController.usersToArray(users);
-      this.client.db.update(entry).then(() => {
+    const newUser: User = {
+      id: newMember.user.id,
+      name: newMember.nickname || newMember.user.username,
+      joinedAt: newMember.joinedAt,
+      isBot: newMember.user.bot,
+      onInara: 'No',
+      inSquadron: 'No',
+      inaraName: '<No name specified>',
+      notified: 'No'
+    };
+    console.debug(`Added new user ${newMember.nickname || newMember.user.username} [${newMember.user.id}].`);
+    this.client.db.updateUser(newMember.guild.id, newUser).then(user => {
+      GoogleSheets.updateUser(this.client.bot.config, this.client.bot.config.sheets.members, user);
+      this.client.db.fetch(newMember.guild.id).then(entry => {
         if (newMember.guild.systemChannel instanceof Discord.TextChannel) {
           const channel = newMember.guild.systemChannel as Discord.TextChannel;
-          channel.send(MemberController.MSG_WELCOME(newMember));
+          channel.send(MemberController.MSG_WELCOME(newMember)).catch(console.log);
           if (entry.notificationChannels) {
             entry.notificationChannels.forEach(ch => {
               const notify = this.client.channels.get(ch.id) as Discord.TextChannel;
               if (notify) {
-                notify.send(`@here: ${newMember} just joined the server.`);
+                notify.send(`@here: ${newMember} just joined the server.`).catch(console.log);
               }
             });
           }
@@ -109,37 +145,66 @@ export class MemberController extends AbstractController {
   }
 
   onGuildMemberRemove(member: Discord.GuildMember): void {
-    this.client.db.fetch(member.guild.id).then(entry => {
-      if (!entry) return;
-      if (!entry.users) entry.users = [];
-      const users = MemberController.usersToMap(entry.users);
-      const user = users.get(member.user.id);
-      if (user) {
+    this.client.db
+      .fetchUser(member.guild.id, member.id)
+      .then(user => {
         user.leftAt = new Date();
         user.lastSeen = user.leftAt;
-        users.set(user.id, user);
-        entry.users = MemberController.usersToArray(users);
-        this.client.db.update(entry).then(entry => {
-          if (entry.notificationChannels) {
-            entry.notificationChannels.forEach(ch => {
-              const notify = this.client.channels.get(ch.id) as Discord.TextChannel;
-              if (notify) {
-                notify.send(`@here: The user ${member} left the server. He had the roles: ${member.roles.map(role => role.name.slice(1)).join(', ')}`);
-              }
-            });
+        return user;
+      })
+      .then(user => this.client.db.updateUser(member.guild.id, user))
+      .then(user => GoogleSheets.updateUser(this.client.bot.config, this.client.bot.config.sheets.members, user))
+      .then(user => {
+        this.client.db
+          .fetch(member.guild.id)
+          .then(entry => {
+            if (entry.notificationChannels) {
+              entry.notificationChannels.forEach(ch => {
+                const notify = this.client.channels.get(ch.id) as Discord.TextChannel;
+                if (notify) {
+                  notify
+                    .send(`@here: The user ${user.name} left the server. He had the roles: ${member.roles.map(role => role.name.slice(1)).join(', ')}`)
+                    .catch(console.log);
+                }
+              });
+            }
+            console.debug(`User ${member.nickname || member.user.username} [${member.user.id}] has left the server.`);
+          })
+          .catch(console.log);
+      });
+  }
+
+  private syncSheet(sheet: Sheet, users: User[]): void {
+    GoogleSheets.readValues(this.client.bot.config, sheet)
+      .then(rows => {
+        users.sort((a, b) => a.name.localeCompare(b.name));
+        if (!rows) rows = [];
+        let changed = false;
+        users.forEach(user => {
+          const idx = rows.findIndex(element => element != null && element[GoogleSheets.COL_ID] === user.id);
+          console.log(`${user.name} found at index ${idx}`);
+          let row: (string | null)[] = [];
+
+          if (idx >= 0) {
+            row = rows[idx];
           }
-          console.debug(`User ${member.nickname || member.user.username} [${member.user.id}] has left the server.`);
+
+          const result = GoogleSheets.fromDbToSheet(row, user);
+          changed = changed || result.changed;
+          row = result.row;
+          if (idx < 0) {
+            rows.push(row);
+          } else {
+            rows[idx] = row;
+          }
         });
-      }
-    });
-  }
-
-  public static usersToMap(users: User[]): Map<string, User> {
-    return new Map(users.map(e => [e.id, e]));
-  }
-
-  public static usersToArray(users: Map<string, User>): User[] {
-    return Array.from(users.values());
+        if (changed) {
+          console.log(`returning ${rows.length} rows`);
+          return rows;
+        } else return [];
+      })
+      .then(rows => GoogleSheets.saveValues(this.client.bot.config, sheet, rows))
+      .catch(console.log);
   }
 
   public static MSG_WELCOME = (member: Discord.GuildMember): string => `Welcome to **IP3X Headquarters**, ${member}!

@@ -1,5 +1,5 @@
 import Datastore from 'nedb';
-import { GuildEntry } from '../bot/api/storage';
+import { GuildEntry, User } from '../bot/api/storage';
 
 export class DB {
   private store: Datastore;
@@ -67,5 +67,43 @@ export class DB {
 
   public compact(): void {
     this.store.persistence.compactDatafile();
+  }
+
+  public async fetchUser(guildId: string, userId: string): Promise<User> {
+    return new Promise<User>(async (resolve, reject) => {
+      const entry = await this.fetch(guildId);
+      if (!entry.users) {
+        reject('No users stored...');
+      } else {
+        const users = DB.usersToMap(entry.users);
+        const user = users.get(userId);
+        if (!user) {
+          reject('user with it ' + userId + 'not found...');
+        }
+        resolve(user);
+      }
+    });
+  }
+
+  public async updateUser(guildId: string, user: User): Promise<User> {
+    return new Promise<User>(async (resolve, reject) => {
+      const entry = await this.fetch(guildId);
+      if (!entry.users) {
+        reject('No users stored...');
+      } else {
+        const users = DB.usersToMap(entry.users);
+        users.set(user.id, user);
+        entry.users = DB.usersToArray(users);
+        this.update(entry);
+        resolve(user);
+      }
+    });
+  }
+  public static usersToMap(users: User[]): Map<string, User> {
+    return new Map(users.map(e => [e.id, e]));
+  }
+
+  public static usersToArray(users: Map<string, User>): User[] {
+    return Array.from(users.values());
   }
 }

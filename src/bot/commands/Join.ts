@@ -6,6 +6,8 @@ import { DiscordEvents } from '../core/DiscordEvents';
 import * as nedb from 'nedb';
 import { MemberController } from '../controllers/MemberController';
 import { User, GuildEntry } from '../api/storage';
+import { GoogleSheets } from '../../utilities/GoogleSheets';
+import { DB } from '../../utilities/Datastore';
 
 export class Join extends AbstractCommand {
   public command = 'join';
@@ -30,18 +32,26 @@ export class Join extends AbstractCommand {
     joinMessage.member.send(Join.MSG_RESPONSE_1(member)).then(messages => {
       const msg = messages as Discord.Message;
       msg.react('✅').then(() => msg.react('❌'));
-      joinMessage.channel.send(`${member}, i have sent you a direct message!`);
-      this.fetchUser(guildId, member.id)
+      joinMessage.channel.send(`${member}, i have sent you a direct message!`).catch(console.log);
+      this.client.db
+        .fetchUser(guildId, member.id)
         .then(user => {
+          user.onInara = 'Not checked';
+          user.inSquadron = 'Not checked';
+          user.inaraName = '<no name specified>';
+          user.notified = 'No';
           user.application = {
             startAt: new Date(),
-            applicationStep: 0,
+            step: 'Started',
             dmChannelId: msg.channel.id,
             msgId: msg.id
           };
           return user;
         })
-        .then(user => this.updateUser(guildId, user));
+        .then(user => this.client.db.updateUser(guildId, user))
+        .then(user => {
+          return GoogleSheets.updateUser(this.client.bot.config, this.client.bot.config.sheets.members, user);
+        });
     });
   }
 
@@ -64,17 +74,17 @@ export class Join extends AbstractCommand {
           return;
         }
         if (docs.length > 1) {
-          user.send(`https://giphy.com/gifs/theviralfever-funny-lol-meme-jaeVcsuCOI2i5Yn0w5`);
+          user.send(`https://giphy.com/gifs/theviralfever-funny-lol-meme-jaeVcsuCOI2i5Yn0w5`).catch(console.log);
         }
         const doc = docs[0] as GuildEntry;
-        this.fetchUser(doc._id, user.id).then(storedUser => {
+        this.client.db.fetchUser(doc._id, user.id).then(storedUser => {
           if (!storedUser.application) {
             //no application found, nothing to do. the error happened somewhere else.
             console.log('no application found for user: ', storedUser.id);
             return;
           }
-          switch (storedUser.application.applicationStep) {
-            case 0:
+          switch (storedUser.application.step) {
+            case 'Started':
               reaction.message.delete().then(() =>
                 user
                   .send(Join.MSG_RESPONSE_2)
@@ -83,33 +93,42 @@ export class Join extends AbstractCommand {
                     const msg = messages as Discord.Message;
                     msg.react('✅').then(() => msg.react('❌'));
                     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                    storedUser.application!.applicationStep = 1;
+                    storedUser.application!.step = 'In Progress';
                     return storedUser;
                   })
                   .then(user => {
-                    if (user) this.updateUser(doc._id, user);
+                    return this.client.db.updateUser(doc._id, user);
                   })
+                  .then(user => {
+                    return GoogleSheets.updateUser(this.client.bot.config, this.client.bot.config.sheets.members, user);
+                  })
+                  .catch(console.log)
               );
               break;
-            case 1:
+            case 'In Progress':
               reaction.message.delete().then(() =>
                 user
                   .send(Join.MSG_RESPONSE_4(user))
                   .then(() => {
                     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                    storedUser.application!.applicationStep = 2;
+                    storedUser.application!.step = 'Finished';
+                    storedUser.application!.finishedAt = new Date();
                     return storedUser;
                   })
                   .then(user => {
-                    if (user) this.updateUser(doc._id, user);
+                    return this.client.db.updateUser(doc._id, user);
                   })
+                  .then(user => {
+                    return GoogleSheets.updateUser(this.client.bot.config, this.client.bot.config.sheets.members, user);
+                  })
+                  .catch(console.log)
               );
               break;
           }
         });
       });
     } else if (emoji === '❌') {
-      user.send(Join.MSG_CANCEL_APPLICATION);
+      user.send(Join.MSG_CANCEL_APPLICATION).catch(console.log);
       this.client.db.getInstance().find({ 'users.id': user.id, 'users.application': { $exists: true } }, (err: any, docs: any) => {
         if (!docs || docs.length == 0) {
           //no user found, nothing to do. the error happened somewhere else.
@@ -118,10 +137,11 @@ export class Join extends AbstractCommand {
         }
         if (docs.length > 1) {
           console.log('multiple users found', docs);
-          user.send(`https://giphy.com/gifs/theviralfever-funny-lol-meme-jaeVcsuCOI2i5Yn0w5`);
+          user.send(`https://giphy.com/gifs/theviralfever-funny-lol-meme-jaeVcsuCOI2i5Yn0w5`).catch(console.log);
         }
         const doc = docs[0] as GuildEntry;
-        this.fetchUser(doc._id, user.id)
+        this.client.db
+          .fetchUser(doc._id, user.id)
           .then(user => {
             if (!user.application) {
               //no application found, nothing to do. the error happened somewhere else.
@@ -129,10 +149,14 @@ export class Join extends AbstractCommand {
               return;
             }
             user.application.canceledAt = new Date();
+            user.application.step = 'Cancelled';
             return user;
           })
           .then(user => {
-            if (user) this.updateUser(doc._id, user);
+            if (user) return this.client.db.updateUser(doc._id, user);
+          })
+          .then(user => {
+            if (user) return GoogleSheets.updateUser(this.client.bot.config, this.client.bot.config.sheets.members, user);
           });
       });
     } else {
@@ -153,36 +177,6 @@ export class Join extends AbstractCommand {
       return;
     }
     console.debug(`Removed emoji ${reaction.emoji}, ${reaction.me}, ${user}`);
-  }
-
-  private async fetchUser(guildId: string, userId: string): Promise<User> {
-    return new Promise<User>(async (resolve, reject) => {
-      const entry = await this.client.db.fetch(guildId);
-      if (!entry.users) {
-        reject('No users stored...');
-      } else {
-        const users = MemberController.usersToMap(entry.users);
-        const user = users.get(userId);
-        if (!user) {
-          reject('user with it ' + userId + 'not found...');
-        }
-        resolve(user);
-      }
-    });
-  }
-
-  private async updateUser(guildId: string, user: User): Promise<GuildEntry> {
-    return new Promise<GuildEntry>(async (resolve, reject) => {
-      const entry = await this.client.db.fetch(guildId);
-      if (!entry.users) {
-        reject('No users stored...');
-      } else {
-        const users = MemberController.usersToMap(entry.users);
-        users.set(user.id, user);
-        entry.users = MemberController.usersToArray(users);
-        this.client.db.update(entry);
-      }
-    });
   }
 
   help(): HelpField[] {

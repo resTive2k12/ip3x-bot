@@ -54,7 +54,7 @@ export abstract class AbstractCommand implements Command {
     }
 
     if (this.requiresAdminAccess && message.author && !(await this.isAdmin(message.member))) {
-      message.author.send(`You are not allowed to use the command '${this.command}'.`);
+      message.author.send(`You are not allowed to use the command '${this.command}'.`).catch(console.log);
       return false;
     }
 

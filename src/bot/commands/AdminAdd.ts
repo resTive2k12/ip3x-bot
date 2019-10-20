@@ -1,17 +1,16 @@
-import { Client } from "../api/client";
-import * as Discord from "discord.js";
-import { HelpField } from "../..";
-import { AbstractCommand } from "./AbstractCommand";
-import { DiscordEvents } from "../core/DiscordEvents";
-import { AdminRoles } from "../api/storage";
+import { Client } from '../api/client';
+import * as Discord from 'discord.js';
+import { HelpField } from '../..';
+import { AbstractCommand } from './AbstractCommand';
+import { DiscordEvents } from '../core/DiscordEvents';
+import { AdminRoles } from '../api/storage';
 
 export class AddAdmin extends AbstractCommand {
-  public command = "add-admin";
+  public command = 'add-admin';
   public aliases: string[] = [];
   public requiresBotMention = true;
   public requiresAdminAccess = true;
   public botAllowed = false;
-
 
   constructor(client: Client) {
     super(client);
@@ -45,15 +44,24 @@ export class AddAdmin extends AbstractCommand {
       }
     });
     entry.adminRoles = roles;
-    this.db.update(entry).then(() => {
-      message.channel.send('Successfully added.');
-    }).catch(rejected => {
-      message.channel.send('Failed to add access. Check protocol.');
-      console.error("Error saving adding admin access: ", rejected);
-    });;
+    this.db
+      .update(entry)
+      .then(() => {
+        message.channel.send('Successfully added.').catch(console.log);
+      })
+      .catch(rejected => {
+        message.channel.send('Failed to add access. Check protocol.').catch(console.log);
+        console.error('Error saving adding admin access: ', rejected);
+      });
   }
 
   help(): HelpField[] {
-    return [{ name: "add-admin", value: "The mentions of users and users are added to the group of users who can change the settings. Mentions of channels will be silently ignored.\n\n**Usage**: ```@IP3X-Assistant add-admin [@role...] [@user...]```" }];
+    return [
+      {
+        name: 'add-admin',
+        value:
+          'The mentions of users and users are added to the group of users who can change the settings. Mentions of channels will be silently ignored.\n\n**Usage**: ```@IP3X-Assistant add-admin [@role...] [@user...]```'
+      }
+    ];
   }
 }

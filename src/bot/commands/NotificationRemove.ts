@@ -45,10 +45,10 @@ export class NotificationRemove extends AbstractCommand {
     this.db
       .update(entry)
       .then(() => {
-        message.channel.send('Successfully removed.');
+        message.channel.send('Successfully removed.').catch(console.log);
       })
       .catch(rejected => {
-        message.channel.send('Failed to remove access. Check protocol.');
+        message.channel.send('Failed to remove access. Check protocol.').catch(console.log);
         console.error('Error saving removed admin access: ', rejected);
       });
   }

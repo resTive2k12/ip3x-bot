@@ -40,16 +40,22 @@ export class HelpCommand extends AbstractCommand {
       embed.setDescription(
         'A list of currently available commands.\nUse `@IP3X Assistant !help <command name>` for more detailed information.\n__You **should** use further help commands in this direct message.__'
       );
-      embed.addField('known commands', this.client.bot.commands.filter(cmd => cmd.applyHelp).map(command => command.command).join(', '));
+      embed.addField(
+        'known commands',
+        this.client.bot.commands
+          .filter(cmd => cmd.applyHelp)
+          .map(command => command.command)
+          .join(', ')
+      );
     }
 
     embed.setAuthor('Automated IP3X assistant', 'attachment://charity.png', 'https://inara.cz/squadron/6172/');
     embed.attachFiles(['./images/charity.png', './images/logo-detailed.png']);
     embed.setThumbnail('attachment://logo-detailed.png');
 
-    message.author.send(embed);
+    message.author.send(embed).catch(console.log);
     if (message.channel.type !== 'dm') {
-      message.channel.send(`${message.author} I have sent you a direct message.`);
+      message.channel.send(`${message.author} I have sent you a direct message.`).catch(console.log);
     }
   }
 
