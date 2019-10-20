@@ -10,6 +10,7 @@ export interface GuildEntry {
   /** List of discord role ids  which are allowed to perform administrative actions (mostly configuration)
    * @see {Discord.Role#id} */
   adminRoles?: AdminRoles[];
+  notificationChannels?: NotificationChannels[];
 
   /** List of known users in that guild (Discord.GuildMember) */
   users?: User[];
@@ -20,6 +21,10 @@ export interface GuildEntry {
 
 export interface AdminRoles {
   type: string;
+  id: string;
+}
+
+export interface NotificationChannels {
   id: string;
 }
 
