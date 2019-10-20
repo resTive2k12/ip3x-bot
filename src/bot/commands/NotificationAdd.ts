@@ -25,14 +25,12 @@ export class NotificationAdd extends AbstractCommand {
 
     let parsed = this.parseMessageIntoParameters(message);
     parsed = parsed.slice(2);
-    console.log(message.cleanContent, parsed);
     const entry = await this.db.fetch(message.guild.id);
     const channels: NotificationChannels[] = entry.notificationChannels || [];
     parsed.forEach(async item => {
       const mentions = item.match(/^<(((?:#))(\d+))>$/);
       if (mentions) {
-        console.log(mentions);
-        if (channels.find(role => role.id === mentions[3])) {
+        if (channels.find(channel => channel.id === mentions[3])) {
           console.debug(`${this.constructor.name}#onMessage entry for id ${mentions[3]} already exists.`);
           return;
         }
