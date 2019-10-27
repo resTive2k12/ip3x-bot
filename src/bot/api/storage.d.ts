@@ -48,15 +48,15 @@ export interface MissionEntry {
   lastSync: number;
 }
 
-export type Notification = 'Yes' | 'No' | 'Ignore' | 'Bot';
+export type Notification = 'Yes' | 'No' | 'Ignore' | 'Bot' | 'Envoy';
 export type NotChecked = 'Not checked';
 export type Validation = Notification | NotChecked;
 export type ApplicationStep = 'Error' | 'Started' | 'In Progress' | 'Finished' | 'Ignore' | 'Cancelled';
 
 export interface User {
-  id: string;
+  _id: string;
+  guildId: string;
   name: string;
-
   joinedAt: Date;
   leftAt?: Date;
   isBot: boolean;

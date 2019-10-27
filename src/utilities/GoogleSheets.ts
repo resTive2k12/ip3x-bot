@@ -2,7 +2,6 @@ import { google } from 'googleapis';
 import { JWT, CredentialBody } from 'google-auth-library';
 import { BotConfig, Sheet } from '../bot/api/botconfig';
 import { User } from '../bot/api/storage';
-import { MemberController } from '../bot/controllers/MemberController';
 import { formatDate } from './Utilities';
 
 export class GoogleSheets {
@@ -39,41 +38,42 @@ export class GoogleSheets {
     });
   }
 
-  public static async saveValues(config: BotConfig, sheet: Sheet, values: Array<Array<string | null>>): Promise<any> {
-    return GoogleSheets.auth(config.credentials)
-      .then(jwt => {
-        const updateRequest = {
-          spreadsheetId: sheet.id,
-          auth: jwt,
-          resource: {
-            valueInputOption: 'RAW',
-            data: [
-              {
-                majorDimension: 'ROWS',
-                range: `${sheet.tab}!${sheet.range}`,
-                values: values
-              }
-            ]
-          }
-        };
-        const sheetsv4 = google.sheets('v4');
-        return new Promise<string[]>((resolve, reject) => {
-          sheetsv4.spreadsheets.values.batchUpdate(updateRequest, (err: any, response: any) => {
-            if (err) {
-              reject(err);
+  public static async saveValues(config: BotConfig, sheet: Sheet, values: Array<Array<string | null>>): Promise<Array<Array<string | null>>> {
+    return GoogleSheets.auth(config.credentials).then(jwt => {
+      const updateRequest = {
+        spreadsheetId: sheet.id,
+        auth: jwt,
+        resource: {
+          valueInputOption: 'RAW',
+          data: [
+            {
+              majorDimension: 'ROWS',
+              range: `${sheet.tab}!${sheet.range}`,
+              values: values
             }
-            resolve(response);
-          });
+          ]
+        }
+      };
+      const sheetsv4 = google.sheets('v4');
+      return new Promise<Array<Array<string | null>>>((resolve, reject) => {
+        sheetsv4.spreadsheets.values.batchUpdate(updateRequest, (err: any, response: any) => {
+          if (err) {
+            reject(err);
+          }
+          if (response.status !== 200) {
+            reject(response.statusText);
+          }
+          resolve(values);
         });
-      })
-      .catch(console.log);
+      });
+    });
   }
 
   public static updateUser(config: BotConfig, sheet: Sheet, user: User): any {
     GoogleSheets.readValues(config, sheet)
       .then(rows => {
         if (!rows) return [];
-        const idx = rows.findIndex(element => element != null && element[GoogleSheets.COL_ID] === user.id);
+        const idx = rows.findIndex(element => element != null && element[GoogleSheets.COL_ID] === user._id);
         let changed = false;
         let row: (string | null)[] = [];
         if (idx >= 0) {
@@ -100,8 +100,8 @@ export class GoogleSheets {
 
   public static fromDbToSheet(row: (string | null)[], user: User): { changed: boolean; row: (string | null)[] } {
     const changedContent: number[] = [];
-    if (row[GoogleSheets.COL_ID] !== user.id) {
-      row[GoogleSheets.COL_ID] = user.id;
+    if (row[GoogleSheets.COL_ID] !== user._id) {
+      row[GoogleSheets.COL_ID] = user._id;
       changedContent.push(GoogleSheets.COL_ID);
     }
     if (row[GoogleSheets.COL_NAME] !== user.name) {
@@ -120,9 +120,9 @@ export class GoogleSheets {
       row[GoogleSheets.COL_APPLICATION_START] = formatDate(user.application.startAt);
       changedContent.push(GoogleSheets.COL_APPLICATION_START);
     }
-    if (user.comment && row[GoogleSheets.COL_APPLICATION_COMMENT] !== user.comment) {
-      row[GoogleSheets.COL_APPLICATION_COMMENT] = user.comment;
-      changedContent.push(GoogleSheets.COL_APPLICATION_COMMENT);
+    if (user.comment && row[GoogleSheets.COL_COMMENT] !== user.comment) {
+      row[GoogleSheets.COL_COMMENT] = user.comment;
+      changedContent.push(GoogleSheets.COL_COMMENT);
     }
     if (user.application && row[GoogleSheets.COL_APPLICATION_STATUS] != user.application.step) {
       row[GoogleSheets.COL_APPLICATION_STATUS] = user.application.step;
@@ -162,7 +162,7 @@ export class GoogleSheets {
   public static COL_IN_SQUADRON = 3;
   public static COL_APPLICATION_STATUS = 4;
   public static COL_APPLICATION_USER_NOTIFIED = 5;
-  public static COL_APPLICATION_COMMENT = 6;
+  public static COL_COMMENT = 6;
   public static COL_APPLICATION_START = 7;
   public static COL_APPLICATION_FINISHED = 8;
   public static COL_JOINED = 9;

@@ -2,11 +2,6 @@ import { Client } from '../api/client';
 import { AbstractController } from './AbstractController';
 import { DiscordEvents } from '../core/DiscordEvents';
 import * as Discord from 'discord.js';
-import { User } from '../api/storage';
-import { GoogleSheets } from '../../utilities/GoogleSheets';
-import { Sheet } from '../api/botconfig';
-import { formatDate } from '../../utilities/Utilities';
-import { DB } from '../../utilities/Datastore';
 
 export class MemberController extends AbstractController {
   constructor(client: Client) {
@@ -18,7 +13,7 @@ export class MemberController extends AbstractController {
   }
 
   onReady(): void {
-    this.client.guilds.forEach(async guild => {
+    /*this.client.guilds.forEach(async guild => {
       const entry = await this.client.db.fetch(guild.id);
       if (!entry) return;
       if (!entry.users) entry.users = [];
@@ -28,7 +23,8 @@ export class MemberController extends AbstractController {
         const userIsKnown = users.size > 0 && !!users.get(member.id);
         if (!userIsKnown) {
           const newUser: User = {
-            id: member.user.id,
+            _id: member.user.id,
+            guildId: guild.id,
             name: member.nickname || member.user.username,
             joinedAt: member.joinedAt,
             isBot: member.user.bot,
@@ -60,7 +56,7 @@ export class MemberController extends AbstractController {
                   user.application.step
                 }).`
               );
-              const discordUser = this.client.users.get(user.id);
+              const discordUser = this.client.users.get(user._id);
               if (discordUser && !discordUser.bot) {
                 if (!discordUser.dmChannel) {
                   discordUser.createDM().then(ch => {
@@ -80,16 +76,15 @@ export class MemberController extends AbstractController {
         }
       });
       entry.users = DB.usersToArray(users);
-      if (this.client.bot.config.sheets.members.guildId == guild.id) {
-        this.syncSheet(this.client.bot.config.sheets.members, entry.users);
-      }
+
       this.client.db.update(entry);
-    });
+    });*/
   }
 
   onPresenceUpdate(oldUser: Discord.GuildMember, newUser: Discord.GuildMember): void {
     const oldStatus = oldUser.presence.status;
     const newStatus = newUser.presence.status;
+    /*
 
     if (newStatus != oldStatus) {
       this.client.db.fetch(newUser.guild.id).then(entry => {
@@ -110,12 +105,13 @@ export class MemberController extends AbstractController {
 
         this.client.db.update(entry);
       });
-    }
+    }*/
   }
 
   onGuildMemberAdd(newMember: Discord.GuildMember): void {
-    const newUser: User = {
-      id: newMember.user.id,
+    /*const newUser: User = {
+      _id: newMember.user.id,
+      guildId: newMember.guild.id,
       name: newMember.nickname || newMember.user.username,
       joinedAt: newMember.joinedAt,
       isBot: newMember.user.bot,
@@ -141,11 +137,11 @@ export class MemberController extends AbstractController {
           }
         }
       });
-    });
+    });*/
   }
 
   onGuildMemberRemove(member: Discord.GuildMember): void {
-    this.client.db
+    /*this.client.db
       .fetchUser(member.guild.id, member.id)
       .then(user => {
         user.leftAt = new Date();
@@ -171,40 +167,7 @@ export class MemberController extends AbstractController {
             console.debug(`User ${member.nickname || member.user.username} [${member.user.id}] has left the server.`);
           })
           .catch(console.log);
-      });
-  }
-
-  private syncSheet(sheet: Sheet, users: User[]): void {
-    GoogleSheets.readValues(this.client.bot.config, sheet)
-      .then(rows => {
-        users.sort((a, b) => a.name.localeCompare(b.name));
-        if (!rows) rows = [];
-        let changed = false;
-        users.forEach(user => {
-          const idx = rows.findIndex(element => element != null && element[GoogleSheets.COL_ID] === user.id);
-          console.log(`${user.name} found at index ${idx}`);
-          let row: (string | null)[] = [];
-
-          if (idx >= 0) {
-            row = rows[idx];
-          }
-
-          const result = GoogleSheets.fromDbToSheet(row, user);
-          changed = changed || result.changed;
-          row = result.row;
-          if (idx < 0) {
-            rows.push(row);
-          } else {
-            rows[idx] = row;
-          }
-        });
-        if (changed) {
-          console.log(`returning ${rows.length} rows`);
-          return rows;
-        } else return [];
-      })
-      .then(rows => GoogleSheets.saveValues(this.client.bot.config, sheet, rows))
-      .catch(console.log);
+      });*/
   }
 
   public static MSG_WELCOME = (member: Discord.GuildMember): string => `Welcome to **IP3X Headquarters**, ${member}!

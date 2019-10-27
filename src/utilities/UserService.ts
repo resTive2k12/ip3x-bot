@@ -1,7 +1,7 @@
 import Datastore from 'nedb';
-import { GuildEntry, User } from '../bot/api/storage';
+import { User } from '../bot/api/storage';
 
-export class DB {
+export class UserService {
   private store: Datastore;
 
   constructor(fileName: string, autoLoad = true) {
@@ -15,10 +15,10 @@ export class DB {
     return this.store;
   }
 
-  public fetch(id: string): Promise<GuildEntry> {
-    return new Promise<GuildEntry>((resolve, reject): void => {
+  public fetch(id: string): Promise<User> {
+    return new Promise<User>((resolve, reject): void => {
       if (!this.store) reject('Database instance not loaded...');
-      this.store.findOne<GuildEntry>({ _id: id }, (err, document) => {
+      this.store.findOne<User>({ _id: id }, (err, document) => {
         if (err) {
           reject(err);
         }
@@ -33,8 +33,8 @@ export class DB {
     });
   }
 
-  public updateOrInsert(entry: GuildEntry): Promise<GuildEntry> {
-    return new Promise<GuildEntry>((resolve, reject): void => {
+  public updateOrInsert(entry: User): Promise<User> {
+    return new Promise<User>((resolve, reject): void => {
       if (!this.store) reject('Database instance not loaded...');
       this.store.update({ _id: entry._id }, entry, { upsert: true }, (err, numRows) => {
         if (err) reject(err);
@@ -44,8 +44,8 @@ export class DB {
     });
   }
 
-  public update(entry: GuildEntry): Promise<GuildEntry> {
-    return new Promise<GuildEntry>((resolve, reject): void => {
+  public update(entry: User): Promise<User> {
+    return new Promise<User>((resolve, reject): void => {
       if (!this.store) reject('Database instance not loaded...');
       this.store.update({ _id: entry._id }, entry, {}, (err, numRows) => {
         if (err) reject(err);
@@ -55,8 +55,8 @@ export class DB {
     });
   }
 
-  public insert(entry: GuildEntry): Promise<GuildEntry> {
-    return new Promise<GuildEntry>((resolve, reject): void => {
+  public insert(entry: User): Promise<User> {
+    return new Promise<User>((resolve, reject): void => {
       if (!this.store) reject('Database instance not loaded...');
       this.store.insert(entry, (err, newdoc) => {
         if (err) reject(err);

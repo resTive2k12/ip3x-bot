@@ -3,11 +3,6 @@ import * as Discord from 'discord.js';
 import { AbstractCommand } from './AbstractCommand';
 import { HelpField } from '../..';
 import { DiscordEvents } from '../core/DiscordEvents';
-import * as nedb from 'nedb';
-import { MemberController } from '../controllers/MemberController';
-import { User, GuildEntry } from '../api/storage';
-import { GoogleSheets } from '../../utilities/GoogleSheets';
-import { DB } from '../../utilities/Datastore';
 
 export class Join extends AbstractCommand {
   public command = 'join';
@@ -33,7 +28,7 @@ export class Join extends AbstractCommand {
       const msg = messages as Discord.Message;
       msg.react('✅').then(() => msg.react('❌'));
       joinMessage.channel.send(`${member}, i have sent you a direct message!`).catch(console.log);
-      this.client.db
+      /*this.client.db
         .fetchUser(guildId, member.id)
         .then(user => {
           user.onInara = 'Not checked';
@@ -51,7 +46,7 @@ export class Join extends AbstractCommand {
         .then(user => this.client.db.updateUser(guildId, user))
         .then(user => {
           return GoogleSheets.updateUser(this.client.bot.config, this.client.bot.config.sheets.members, user);
-        });
+        });*/
     });
   }
 
@@ -66,7 +61,7 @@ export class Join extends AbstractCommand {
     }
 
     const emoji = reaction.emoji.name;
-    if (emoji === '✅') {
+    /*if (emoji === '✅') {
       this.client.db.getInstance().find({ 'users.id': user.id, 'users.application': { $exists: true } } as any, (err: any, docs: any) => {
         if (!docs || docs.length == 0) {
           //no user found, nothing to do. the error happened somewhere else.
@@ -161,7 +156,7 @@ export class Join extends AbstractCommand {
       });
     } else {
       console.debug('Unknown emoji: ', emoji);
-    }
+    }*/
 
     //console.log(reaction.emoji.id, reaction.emoji.identifier, reaction.emoji.name);
     //console.debug(`Added emoji ${reaction.emoji}, ${reaction.me}, ${user}`);
