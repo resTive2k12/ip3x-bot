@@ -231,8 +231,8 @@ export class UserSync extends AbstractCommand {
       name: member.nickname || member.user.username,
       onInara: member.user.bot ? 'Bot' : 'Not checked',
       inSquadron: member.user.bot ? 'Bot' : 'Not checked',
-      notified: member.user.bot ? 'Bot' : 'No',
-      comment: member.user.bot ? 'Bot user. Do not modify!' : undefined
+      notified: member.user.bot ? 'Bot' : 'Ignore',
+      comment: member.user.bot ? 'Bot user. Do not modify!' : 'Found at synchronization. This user is "unchecked" but will never be notified, unless changed to "No".'
     };
     return user;
   }
@@ -242,10 +242,10 @@ export class UserSync extends AbstractCommand {
   }
 
   public static WELCOME_MSG = (x: Discord.User): string => `**Welcome to IP3X, CMDR ${x} o7**
-Good news! Your application was verified and you’re now a :seedling: Recruit of **IP3X**. 
+Good news! Your application was verified and you’re now a :seedling: Recruit of **IP3X**.
 
-You should now be able to see the private channels, where most of the action takes place. 
-  
+You should now be able to see the private channels, where most of the action takes place.
+
 :hash: **Important Channels**
 #squadron - This is where most activity takes place.
 #🔔announcements - You should always read new posts here.

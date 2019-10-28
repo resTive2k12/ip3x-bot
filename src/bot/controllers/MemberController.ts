@@ -21,6 +21,9 @@ export class MemberController extends AbstractController {
         const channel = this.client.channels.get(user.application.dmChannelId) as Discord.DMChannel;
         channel.fetchMessages({ limit: 100 }).then(msgs => {
           console.log(`loaded ${msgs ? msgs.size : 0} unfinished user application for ${user.name}', `);
+          msgs.forEach(element => {
+            element.reactions.forEach(reaction => console.log(reaction));
+          });
         });
       });
     });
