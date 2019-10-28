@@ -3,6 +3,8 @@ import * as Discord from 'discord.js';
 import { AbstractCommand } from './AbstractCommand';
 import { HelpField } from '../..';
 import { DiscordEvents } from '../core/DiscordEvents';
+import { User } from '../api/storage';
+import { GoogleSheets } from '../../utilities/GoogleSheets';
 
 export class Join extends AbstractCommand {
   public command = 'join';
@@ -18,16 +20,61 @@ export class Join extends AbstractCommand {
     this.listeners.push(DiscordEvents.REACTION_REMOVE);
   }
 
+  async onGuildMemberAdd(member: Discord.GuildMember): Promise<void> {
+    const user: User = {
+      _id: member.id,
+      guildId: member.guild.id,
+      name: member.nickname || member.user.username,
+      joinedAt: member.joinedAt,
+      isBot: member.user.bot,
+      inSquadron: 'Not applied',
+      onInara: 'Not applied',
+      notified: 'Ignore',
+      comment: 'Just joined discord'
+    };
+    this.client.bot.userService.updateOrInsert(user).then(user => GoogleSheets.updateUser(this.client.bot.config, this.client.bot.config.sheets.members, user));
+    if (member.guild.systemChannel instanceof Discord.TextChannel) {
+      const channel = member.guild.systemChannel as Discord.TextChannel;
+      channel.send(Join.MSG_WELCOME(member)).catch(console.log);
+    }
+  }
+
   async onMessage(joinMessage: Discord.Message): Promise<void> {
     if (!(await this.matches(joinMessage))) {
       return;
     }
     const member = joinMessage.member;
-    const guildId = joinMessage.guild.id;
     joinMessage.member.send(Join.MSG_RESPONSE_1(member)).then(messages => {
       const msg = messages as Discord.Message;
       msg.react('✅').then(() => msg.react('❌'));
-      joinMessage.channel.send(`${member}, i have sent you a direct message!`).catch(console.log);
+      const channelId = '';
+      joinMessage.channel
+        .send(`${member}, i have sent you a direct message!`)
+        .then(msg => {
+          const message = msg as Discord.Message;
+          return message.channel.id;
+        })
+        .then(channelId => {
+          this.client.bot.userService
+            .fetch(member.id)
+            .then(user => {
+              user.onInara = 'Not checked';
+              user.inSquadron = 'Not checked';
+              user.notified = 'No';
+              user.comment = 'Applied via !join command.';
+              user.application = {
+                startAt: new Date(),
+                step: 'Started',
+                dmChannelId: channelId,
+                finishedAt: undefined
+              };
+              return user;
+            })
+            .then(user => this.client.bot.userService.updateOrInsert(user))
+            .then(user => GoogleSheets.updateUser(this.client.bot.config, this.client.bot.config.sheets.members, user))
+            .catch(console.log);
+        })
+        .catch(console.log);
       /*this.client.db
         .fetchUser(guildId, member.id)
         .then(user => {
@@ -61,7 +108,80 @@ export class Join extends AbstractCommand {
     }
 
     const emoji = reaction.emoji.name;
-    /*if (emoji === '✅') {
+
+    if (emoji === '✅') {
+      this.client.bot.userService.fetch(user.id).then(user => {
+        const discordUser = this.client.users.get(user._id);
+        if (!discordUser) return;
+        if (!user.application) return;
+        switch (user.application.step) {
+          case 'Started':
+            reaction.message.delete().then(() =>
+              discordUser
+                .send(Join.MSG_RESPONSE_2)
+                .then(() => discordUser.send({ embed: { description: Join.MSG_RESPONSE_3 } }))
+                .then(messages => {
+                  const msg = messages as Discord.Message;
+                  msg.react('✅').then(() => msg.react('❌'));
+                  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                  user.application!.step = 'In Progress';
+                  return user;
+                })
+                .then(user => {
+                  return this.client.bot.userService.updateOrInsert(user);
+                })
+                .then(user => {
+                  return GoogleSheets.updateUser(this.client.bot.config, this.client.bot.config.sheets.members, user);
+                })
+                .catch(console.log)
+            );
+            break;
+          case 'In Progress':
+            reaction.message.delete().then(() =>
+              discordUser
+                .send(Join.MSG_RESPONSE_4(discordUser))
+                .then(() => {
+                  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                  user.application!.step = 'Finished';
+                  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                  user.application!.finishedAt = new Date();
+                  return user;
+                })
+                .then(user => {
+                  return this.client.bot.userService.updateOrInsert(user);
+                })
+                .then(user => {
+                  return GoogleSheets.updateUser(this.client.bot.config, this.client.bot.config.sheets.members, user);
+                })
+                .catch(console.log)
+            );
+            break;
+        }
+      });
+    } else if (emoji === '❌') {
+      user.send(Join.MSG_CANCEL_APPLICATION).catch(console.log);
+      this.client.bot.userService
+        .fetch(user.id)
+        .then(user => {
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          user.application!.finishedAt = new Date();
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          user.application!.step = 'Cancelled';
+          user.onInara = 'Not applied';
+          user.inSquadron = 'Not applied';
+          user.notified = 'Ignore';
+          user.comment = 'User has cancelled application process via bot.';
+          return user;
+        })
+        .then(user => {
+          return this.client.bot.userService.updateOrInsert(user);
+        })
+        .then(user => {
+          return GoogleSheets.updateUser(this.client.bot.config, this.client.bot.config.sheets.members, user);
+        })
+        .catch(console.log);
+    }
+    /*
       this.client.db.getInstance().find({ 'users.id': user.id, 'users.application': { $exists: true } } as any, (err: any, docs: any) => {
         if (!docs || docs.length == 0) {
           //no user found, nothing to do. the error happened somewhere else.
@@ -228,4 +348,12 @@ Meanwhile, please consider the following:
   public static MSG_CANCEL_APPLICATION = `Application process cancelled.
 
 Please note you can restart the process at any time by typing !join in #public_chat`;
+
+  public static MSG_WELCOME = (member: Discord.GuildMember): string => `Welcome to **IP3X Headquarters**, ${member}!
+
+If you’re looking to join our squadron, please type !join in this channel.
+
+Meanwhile, we direct you to the #welcome channel, which contains important information.
+
+_We hope you enjoy your stay_.`;
 }

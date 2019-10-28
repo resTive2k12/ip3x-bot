@@ -2,6 +2,7 @@ import { Client } from '../api/client';
 import { AbstractController } from './AbstractController';
 import { DiscordEvents } from '../core/DiscordEvents';
 import * as Discord from 'discord.js';
+import { User } from '../api/storage';
 
 export class MemberController extends AbstractController {
   constructor(client: Client) {
@@ -13,6 +14,16 @@ export class MemberController extends AbstractController {
   }
 
   onReady(): void {
+    this.client.bot.userService.getInstance().find({}, (err: any, docs: User[]) => {
+      if (!docs) return;
+      docs.forEach(user => {
+        if (!user.application || !user.application.dmChannelId || user.application.finishedAt) return;
+        const channel = this.client.channels.get(user.application.dmChannelId) as Discord.DMChannel;
+        channel.fetchMessages({ limit: 100 }).then(msgs => {
+          console.log(`loaded ${msgs ? msgs.size : 0} unfinished user application for ${user.name}', `);
+        });
+      });
+    });
     /*this.client.guilds.forEach(async guild => {
       const entry = await this.client.db.fetch(guild.id);
       if (!entry) return;
@@ -169,12 +180,4 @@ export class MemberController extends AbstractController {
           .catch(console.log);
       });*/
   }
-
-  public static MSG_WELCOME = (member: Discord.GuildMember): string => `Welcome to **IP3X Headquarters**, ${member}!
-
-If you’re looking to join our squadron, please type !join in this channel.
-
-Meanwhile, we direct you to the #welcome channel, which contains important information.
-
-_We hope you enjoy your stay_.`;
 }

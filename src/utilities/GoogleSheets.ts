@@ -1,8 +1,9 @@
 import { google } from 'googleapis';
 import { JWT, CredentialBody } from 'google-auth-library';
 import { BotConfig, Sheet } from '../bot/api/botconfig';
-import { User } from '../bot/api/storage';
+import { User, ApplicationStep, Notification, Validation } from '../bot/api/storage';
 import { formatDate } from './Utilities';
+import * as Discord from 'discord.js';
 
 export class GoogleSheets {
   private static SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
@@ -70,31 +71,19 @@ export class GoogleSheets {
   }
 
   public static updateUser(config: BotConfig, sheet: Sheet, user: User): any {
-    GoogleSheets.readValues(config, sheet)
+    GoogleSheets.readValues(config, config.sheets.members)
       .then(rows => {
-        if (!rows) return [];
-        const idx = rows.findIndex(element => element != null && element[GoogleSheets.COL_ID] === user._id);
-        let changed = false;
-        let row: (string | null)[] = [];
-        if (idx >= 0) {
-          row = rows[idx];
+        if (!rows) {
+          rows = [];
+          rows.push(GoogleSheets.userToArray(user));
+        } else {
+          const idx = rows.findIndex(element => element != null && element[GoogleSheets.COL_ID] === user._id);
+          rows.splice(idx, 1, GoogleSheets.userToArray(user));
         }
 
-        const result = GoogleSheets.fromDbToSheet(row, user);
-        changed = changed || result.changed;
-        row = result.row;
-        if (idx < 0) {
-          rows.push(row);
-        } else {
-          rows[idx] = row;
-        }
-        if (changed) {
-          console.log(`returning ${rows.length} rows`);
-          return rows;
-        }
-        return [];
+        return rows;
       })
-      .then(rows => GoogleSheets.saveValues(config, sheet, rows))
+      .then(rows => GoogleSheets.saveValues(config, config.sheets.members, rows))
       .catch(console.log);
   }
 
@@ -154,6 +143,72 @@ export class GoogleSheets {
       return { changed: true, row: row };
     }
     return { changed: false, row: row };
+  }
+
+  public static setValue(col: number, value: string | null, currentArray: Array<string | null>): Array<string | null> {
+    const newArray = currentArray;
+    newArray[col] = value;
+    if (col == GoogleSheets.COL_APPLICATION_STATUS) {
+      console.log('value', value, col);
+    }
+    return newArray;
+  }
+
+  public static userToArray(user: User): Array<string | null> {
+    let userArray: (string | null)[] = [];
+    if (user._id) userArray[GoogleSheets.COL_ID] = user._id;
+    userArray = GoogleSheets.setValue(GoogleSheets.COL_ID, user._id, userArray);
+    userArray = GoogleSheets.setValue(GoogleSheets.COL_NAME, user.name, userArray);
+    userArray = GoogleSheets.setValue(GoogleSheets.COL_ON_INARA, user.onInara, userArray);
+    userArray = GoogleSheets.setValue(GoogleSheets.COL_INARA_NAME, user.inaraName ? user.inaraName : null, userArray);
+    userArray = GoogleSheets.setValue(GoogleSheets.COL_IN_SQUADRON, user.inSquadron, userArray);
+    userArray = GoogleSheets.setValue(
+      GoogleSheets.COL_COMMENT,
+      user.comment ? user.comment : 'Found while syncing. Entry needs to be manually completed.',
+      userArray
+    );
+    console.log(user.name, user.joinedAt, formatDate(user.joinedAt));
+    userArray = GoogleSheets.setValue(GoogleSheets.COL_JOINED, formatDate(user.joinedAt), userArray);
+
+    userArray = GoogleSheets.setValue(GoogleSheets.COL_APPLICATION_USER_NOTIFIED, user.notified, userArray);
+    if (user.application) {
+      userArray = GoogleSheets.setValue(GoogleSheets.COL_APPLICATION_START, user.application.startAt ? formatDate(user.application.startAt) : 'iff', userArray);
+      userArray = GoogleSheets.setValue(GoogleSheets.COL_APPLICATION_STATUS, user.application.step, userArray);
+      userArray = GoogleSheets.setValue(
+        GoogleSheets.COL_APPLICATION_FINISHED,
+        user.application.finishedAt ? formatDate(user.application.finishedAt) : '',
+        userArray
+      );
+    }
+    userArray = GoogleSheets.setValue(GoogleSheets.COL_LAST_UPDATE, formatDate(new Date()), userArray);
+    return userArray;
+  }
+
+  public static arrayToUser(userArray: Array<string | null>, guild: Discord.Guild): User {
+    const user: User = {
+      _id: userArray[GoogleSheets.COL_ID] as string,
+      guildId: guild.id,
+      name: userArray[GoogleSheets.COL_NAME] as string,
+      joinedAt: new Date(Date.parse(userArray[GoogleSheets.COL_JOINED] as string)),
+      onInara: userArray[GoogleSheets.COL_ON_INARA] as Validation,
+      inaraName: userArray[GoogleSheets.COL_INARA_NAME] as string,
+      inSquadron: userArray[GoogleSheets.COL_IN_SQUADRON] as Validation,
+      isBot: userArray[GoogleSheets.COL_ON_INARA] === 'Bot',
+      notified: userArray[GoogleSheets.COL_APPLICATION_USER_NOTIFIED] as Notification,
+      comment: userArray[GoogleSheets.COL_COMMENT] as string
+    };
+
+    if (userArray[GoogleSheets.COL_APPLICATION_STATUS]) {
+      user.application = {
+        startAt: new Date(Date.parse(userArray[GoogleSheets.COL_APPLICATION_START] as string)),
+        finishedAt: userArray[GoogleSheets.COL_APPLICATION_FINISHED]
+          ? new Date(Date.parse(userArray[GoogleSheets.COL_APPLICATION_FINISHED] as string))
+          : undefined,
+        step: userArray[GoogleSheets.COL_APPLICATION_STATUS] as ApplicationStep
+      };
+    }
+
+    return user;
   }
 
   public static COL_NAME = 0;

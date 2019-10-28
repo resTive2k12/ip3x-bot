@@ -48,10 +48,10 @@ export interface MissionEntry {
   lastSync: number;
 }
 
-export type Notification = 'Yes' | 'No' | 'Ignore' | 'Bot' | 'Envoy';
+export type Notification = 'Yes' | 'No' | 'Ignore' | 'Bot' | 'Envoy' | 'Not applied';
 export type NotChecked = 'Not checked';
 export type Validation = Notification | NotChecked;
-export type ApplicationStep = 'Error' | 'Started' | 'In Progress' | 'Finished' | 'Ignore' | 'Cancelled';
+export type ApplicationStep = 'Error' | 'Started' | 'In Progress' | 'Finished' | 'Ignore' | 'Cancelled' | 'Rejected';
 
 export interface User {
   _id: string;

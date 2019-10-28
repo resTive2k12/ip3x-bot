@@ -8,6 +8,7 @@ import { AbstractController } from './controllers/AbstractController';
 import { Controller } from './api/controller';
 import { StorageController } from './controllers/mandatory/StorageController';
 import { DB } from '../utilities/Datastore';
+import { UserService } from '../utilities/UserService';
 
 export class Bot {
   private botId: string | null = null;
@@ -19,9 +20,12 @@ export class Bot {
 
   public logger = console;
 
+  public userService = new UserService('datastore/users.store');
+
   constructor(config: BotConfig) {
     this.config = config;
     this.discordClient = new discord.Client() as Client;
+
     this.discordClient.bot = this;
     this.commands = [];
     this.controllers = [];
@@ -31,7 +35,7 @@ export class Bot {
   start(): void {
     this.discordClient.on('ready', this.onReady.bind(this));
 
-    this.discordClient.login(this.config.token).catch(error => console.error('Error logging in the bot', error));
+    this.discordClient.login(this.config.token).catch(error => console.error('Error logging in the bot'));
   }
 
   onReady(): void {

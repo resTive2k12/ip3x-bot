@@ -5,12 +5,10 @@ import { AbstractCommand } from './AbstractCommand';
 import { DiscordEvents } from '../core/DiscordEvents';
 import { GoogleSheets } from '../../utilities/GoogleSheets';
 
-import { User, Validation, Notification, ApplicationStep } from '../api/storage';
-import { formatDate } from '../../utilities/Utilities';
+import { User } from '../api/storage';
 import { UserService } from '../../utilities/UserService';
-import { applyChange } from 'deep-diff';
 
-export class Tests extends AbstractCommand {
+export class UserSync extends AbstractCommand {
   prototype?: object | undefined;
 
   public command = 'user-sync';
@@ -64,30 +62,52 @@ export class Tests extends AbstractCommand {
           const idx = rows.findIndex(element => element != null && element[GoogleSheets.COL_ID] === member.id);
           if (idx >= 0) {
             //member was found in the sheet
-            const user = this.arrayToUser(rows[idx], guild);
-            console.debug(`\t- User ${user.name} found in google document.`);
+            const user = GoogleSheets.arrayToUser(rows[idx], guild);
             if (this.isUnchecked(user)) {
+              console.log(`${user.name} is unchecked...`);
               knownUncheckedUserCount += 1;
-            } else if (!this.isNotified(user)) {
+            }
+            if (!this.isNotified(user)) {
+              console.log(`${user.name} is not notified...`);
               if (this.isAccepted(user)) {
-                //TODO
+                console.log(`${user.name} got accepted...`);
                 newAcceptedUserCount += 1;
+                const dUser = this.client.users.get(user._id) as Discord.User;
+                user.notified = 'Yes';
+                dUser.send(UserSync.WELCOME_MSG(dUser));
+                this.client.guilds
+                  .get(user.guildId)!
+                  .members.get(user._id)!
+                  .addRole('605473654985457665');
+
                 console.debug(`User ${user.name} got accepted`);
               } else if (this.isDelayed(user)) {
-                //TODO
+                console.log(`${user} got rejected...`);
+                const dUser = this.client.users.get(user._id) as Discord.User;
+                user.notified = 'Yes';
+                user.application!.step = 'Rejected';
+                user.comment = 'User got automatically rejected. Application took longer than "allowed".';
+                dUser.send(UserSync.MSG_REJECTED);
                 newDelayedUserCount += 1;
               }
             } else if (this.isChecked(user)) {
+              console.log(`${user.name} is checked...`);
               knownCheckedUserCount += 1;
             } else if (this.isBot(user)) {
+              console.log(`${user.name} is bot...`);
               knownBotUserCount += 1;
             } else if (this.isSpecial(user)) {
+              console.log(`${user.name} is special...`);
               knownSpecialUserCount += 1;
             } else if (this.isIgnored(user)) {
+              console.log(`${user.name} is ignored...`);
               ignoredUserCount += 1;
             } else {
+              console.log(`${user.name} is unknown...`);
               unknownUserCount += 1;
             }
+
+            rows.splice(idx, 1, GoogleSheets.userToArray(user));
           } else {
             //member was not found in the sheet
             const user = this.createNewUser(member);
@@ -97,8 +117,8 @@ export class Tests extends AbstractCommand {
               newUncheckedUserCount += 1;
               console.debug(`\t- User ${user.name} not found in google document.`);
             }
-            rows.push(this.userToArray(user));
-            this.userStore.insert(user);
+            rows.push(GoogleSheets.userToArray(user));
+            this.userStore.updateOrInsert(user);
           }
         });
         return rows;
@@ -121,7 +141,7 @@ export class Tests extends AbstractCommand {
                     },
                     {
                       name: '__Notified users__',
-                      value: `There are **${newAcceptedUserCount}** users __accepted__ and **${newDelayedUserCount}** __delayed users__ notified.`
+                      value: `There are **${newAcceptedUserCount}** users __accepted__ and **${newDelayedUserCount}** __delayed users__ rejected.`
                     },
                     {
                       name: '__Checked or special users__',
@@ -143,7 +163,7 @@ export class Tests extends AbstractCommand {
                   }
                 }
               })
-              .then(() => message.delete());
+              .then(() => /*message.delete()*/ console.log('maybe delete msg'));
           })
           .catch(reason => {
             message.reply(':warning: User synchronization failed.');
@@ -173,9 +193,12 @@ export class Tests extends AbstractCommand {
   }
 
   private isAccepted(user: User): boolean {
-    let accepted = user.inSquadron !== 'Not checked';
-    accepted = accepted && user.onInara !== 'Not checked';
+    let accepted = user.inSquadron === 'Yes';
+    console.log('in squadron', accepted);
+    accepted = accepted && user.onInara === 'Yes';
+    console.log('in squadron', accepted);
     accepted = accepted && !!user.inaraName;
+    console.log('inaraname', accepted, user.inaraName);
     return accepted;
   }
 
@@ -214,51 +237,48 @@ export class Tests extends AbstractCommand {
     return user;
   }
 
-  private userToArray(user: User): Array<string | null> {
-    let userArray: (string | null)[] = [];
-    if (user._id) userArray[GoogleSheets.COL_ID] = user._id;
-    userArray = this.setValue(GoogleSheets.COL_ID, user._id, userArray);
-    userArray = this.setValue(GoogleSheets.COL_NAME, user.name, userArray);
-    userArray = this.setValue(GoogleSheets.COL_ON_INARA, user.onInara, userArray);
-    userArray = this.setValue(GoogleSheets.COL_INARA_NAME, user.inaraName ? user.inaraName : null, userArray);
-    userArray = this.setValue(GoogleSheets.COL_IN_SQUADRON, user.inSquadron, userArray);
-    userArray = this.setValue(GoogleSheets.COL_COMMENT, user.comment ? user.comment : 'Found while syncing. Entry needs to be manually completed.', userArray);
-    userArray = this.setValue(GoogleSheets.COL_JOINED, formatDate(user.joinedAt), userArray);
-    userArray = this.setValue(GoogleSheets.COL_APPLICATION_USER_NOTIFIED, user.notified, userArray);
-    return userArray;
-  }
-
-  private arrayToUser(userArray: Array<string | null>, guild: Discord.Guild): User {
-    const user: User = {
-      _id: userArray[GoogleSheets.COL_ID] as string,
-      guildId: guild.id,
-      name: userArray[GoogleSheets.COL_NAME] as string,
-      joinedAt: new Date(userArray[GoogleSheets.COL_NAME] as string),
-      onInara: userArray[GoogleSheets.COL_ON_INARA] as Validation,
-      inSquadron: userArray[GoogleSheets.COL_IN_SQUADRON] as Validation,
-      isBot: userArray[GoogleSheets.COL_ON_INARA] === 'Bot',
-      notified: userArray[GoogleSheets.COL_APPLICATION_USER_NOTIFIED] as Notification,
-      comment: userArray[GoogleSheets.COL_COMMENT] as string
-    };
-
-    if (userArray[GoogleSheets.COL_APPLICATION_STATUS]) {
-      user.application = {
-        startAt: new Date(userArray[GoogleSheets.COL_APPLICATION_START] as string),
-        finishedAt: userArray[GoogleSheets.COL_APPLICATION_FINISHED] ? new Date(userArray[GoogleSheets.COL_APPLICATION_FINISHED] as string) : undefined,
-        step: userArray[GoogleSheets.COL_APPLICATION_STATUS] as ApplicationStep
-      };
-    }
-
-    return user;
-  }
-
-  private setValue(col: number, value: string | null, currentArray: Array<string | null>): Array<string | null> {
-    const newArray = currentArray;
-    newArray[col] = value;
-    return newArray;
-  }
-
   help(): HelpField[] {
     return [{ name: this.client.bot.config.prefix + this.command, value: 'Unspecified help' }];
   }
+
+  public static WELCOME_MSG = (x: Discord.User): string => `**Welcome to IP3X, CMDR ${x} o7**
+Good news! Your application was verified and you’re now a :seedling: Recruit of **IP3X**. 
+
+You should now be able to see the private channels, where most of the action takes place. 
+  
+:hash: **Important Channels**
+#squadron - This is where most activity takes place.
+#🔔announcements - You should always read new posts here.
+#bgs_information - Important information, all members should take note.
+#bgs_operations - For those ranked 🔱 Spec Ops, or higher, to discuss BGS.
+
+:information_source: **Useful Links**
+Please check the #useful_links channel.
+_We do expect you to be aware of the following - please read these at your leisure:_
+[IP3X Ranks & Progression](https://inara.cz/squadron-documents/6172/1798/)
+[IP3X Corporation & BGS](https://inara.cz/squadron-documents/6172/1882/)
+
+:hash: **Useful Discord Commands**
+_All of these commands can be used in the #squadron channel._
+
+**!mission** - _Display current Squadron missions to help our in-game faction._
+**@Wing Finder find** - _If you’re looking to wing with other members._
+**@Wing Finder help** - _For full list of commands to help you find a wing with others._
+
+:closed_lock_with_key:  **Private Group**
+It is useful to join our Private Group _in-game_, so that you can play with other members.
+
+:one: In _Elite: Dangerous_, go to the :pause_button: Main Menu :arrow_right: Social :arrow_right: Groups
+:two: In the top right where it says ‘enter commander name’, type: **Evil Tactician**
+:three: Click on Evil Tactician once found and select _Request Join Group_.`;
+
+  public static MSG_FAIL = `Unfortunately, something went wrong during your application.
+
+Please contact someone in IP3X Leadership on Discord, so we can try and resolve this for you.`;
+
+  public static MSG_REJECTED = `Unfortunately, your did not finish the application within 3 days.
+
+Please contact someone in IP3X Leadership on Discord, so we can try and resolve this for you.
+
+Or use the **!join** command again to restart the application process`;
 }
