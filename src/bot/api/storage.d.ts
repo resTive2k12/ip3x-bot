@@ -9,7 +9,11 @@ export interface GuildEntry {
 
   /** List of discord role ids  which are allowed to perform administrative actions (mostly configuration)
    * @see {Discord.Role#id} */
-  adminRoles?: AdminRoles[];
+  adminRoles?: Role[];
+  /** Roles the user gets if the application was successfull. */
+  recruitRoles?: Role[];
+  /** The Roles the user is allowed to apply from.*/
+  joinRoles?: Role[];
   notificationChannels?: NotificationChannels[];
 
   /** List of known users in that guild (Discord.GuildMember) */
@@ -19,7 +23,7 @@ export interface GuildEntry {
   lastUpdate: number;
 }
 
-export interface AdminRoles {
+export interface Role {
   type: string;
   id: string;
 }

@@ -54,15 +54,15 @@ export class UserSync extends AbstractCommand {
     let unknownUserCount = 0;
     let newAcceptedUserCount = 0;
     let newDelayedUserCount = 0;
-
     GoogleSheets.readValues(this.client.bot.config, this.client.bot.config.sheets.members)
       .then(rows => {
         if (!rows) rows = [];
-        guild.members.forEach(member => {
+        guild.members.forEach(async member => {
           const idx = rows.findIndex(element => element != null && element[GoogleSheets.COL_ID] === member.id);
           if (idx >= 0) {
             //member was found in the sheet
             const user = GoogleSheets.arrayToUser(rows[idx], guild);
+            user.name = member.nickname || member.user.username;
             if (this.isUnchecked(user)) {
               console.log(`${user.name} is unchecked...`);
               knownUncheckedUserCount += 1;
@@ -74,12 +74,14 @@ export class UserSync extends AbstractCommand {
                 newAcceptedUserCount += 1;
                 const dUser = this.client.users.get(user._id) as Discord.User;
                 user.notified = 'Yes';
-                dUser.send(UserSync.WELCOME_MSG(dUser));
-                this.client.guilds
-                  .get(user.guildId)!
-                  .members.get(user._id)!
-                  .addRole('605473654985457665');
 
+                dUser.send(UserSync.WELCOME_MSG(dUser));
+                const dbGuild = await this.client.db.fetch(guild.id);
+                if (dbGuild.recruitRoles) {
+                  dbGuild.recruitRoles.forEach(role => {
+                    member.addRole(role.id);
+                  });
+                }
                 console.debug(`User ${user.name} got accepted`);
               } else if (this.isDelayed(user)) {
                 console.log(`${user} got rejected...`);

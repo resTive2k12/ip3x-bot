@@ -25,6 +25,7 @@ export class Bot {
   constructor(config: BotConfig) {
     this.config = config;
     this.discordClient = new discord.Client() as Client;
+    this.discordClient.setMaxListeners(20);
 
     this.discordClient.bot = this;
     this.commands = [];

@@ -3,7 +3,7 @@ import * as Discord from 'discord.js';
 import { HelpField } from '../..';
 import { AbstractCommand } from './AbstractCommand';
 import { DiscordEvents } from '../core/DiscordEvents';
-import { AdminRoles } from '../api/storage';
+import { Role } from '../api/storage';
 
 export class RemoveAdmin extends AbstractCommand {
   public command = 'remove-admin';
@@ -27,7 +27,7 @@ export class RemoveAdmin extends AbstractCommand {
     let parsed = this.parseMessageIntoParameters(message);
     parsed = parsed.slice(2);
     const entry = await this.db.fetch(message.guild.id);
-    const roles: AdminRoles[] = entry.adminRoles || [];
+    const roles: Role[] = entry.adminRoles || [];
     parsed.forEach(async item => {
       const mentions = item.match(/^<((@(?:&?|!?))(\d+))>$/);
       if (mentions) {

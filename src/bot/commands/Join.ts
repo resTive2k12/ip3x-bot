@@ -43,7 +43,14 @@ export class Join extends AbstractCommand {
     if (!(await this.matches(joinMessage))) {
       return;
     }
+
     const member = joinMessage.member;
+    if (member.roles.size > 1) {
+      member.roles.forEach(role => console.log(member.user.username, role.name));
+      joinMessage.reply(Join.MSG_APPLICATION_NOT_ALLOWED);
+      return;
+    }
+
     joinMessage.member.send(Join.MSG_RESPONSE_1(member)).then(messages => {
       const msg = messages as Discord.Message;
       msg.react('✅').then(() => msg.react('❌'));
@@ -300,20 +307,20 @@ export class Join extends AbstractCommand {
 
   public static MSG_RESPONSE_1 = (member: Discord.GuildMember): string => `**o7 CMDR ${member}**
 
-The IP3X application process takes a few minutes to complete and will assist you in joining IP3X both in-game and on Inara. 
+The IP3X application process takes a few minutes to complete and will assist you in joining IP3X both in-game and on Inara.
 The application process is semi-automated via this bot - and completed once someone from IP3X Leadership verifies the submission, usually within 24 hours.
-  
+
 Once started, this process needs to be completed within :clock1: 1 hour, or it will cancel automatically.
 You can start the process again at any point by typing !join in #general
-  
+
 To proceed, please make sure you are ready for the following:
 => Access to Elite (in-game) to apply in-game.
 => You have an account on Inara https://inara.cz and are able to login.
-  
+
 If you’re ready to proceed, please click :white_check_mark:
 If you wish to cancel the process, please click :x:`;
 
-  public static MSG_RESPONSE_2 = `You’ve chosen to proceed with your application. Please read the following instructions carefully as they greatly help us to process your application. 
+  public static MSG_RESPONSE_2 = `You’ve chosen to proceed with your application. Please read the following instructions carefully as they greatly help us to process your application.
 
 If for any reason you get stuck or have problems with this process, please reach out to someone in IP3X Leadership, easily identified on Discord.`;
 
@@ -337,7 +344,7 @@ If you wish to cancel the process, please click :x:`;
   public static MSG_RESPONSE_4 = (member: Discord.GuildMember | Discord.User): string => `Thank you for completing your application, **CMDR ${member}**!
 
 Your application has been received and will now be processed by **IP3X Leadership**.
-If you don’t receive confirmation within :clock12: 48 hours, please do let us know. 
+If you don’t receive confirmation within :clock12: 48 hours, please do let us know.
 We normally process within a few hours - but this may depend on your time-zone.
 
 Meanwhile, please consider the following:
@@ -356,4 +363,6 @@ If you’re looking to join our squadron, please type !join in this channel.
 Meanwhile, we direct you to the #welcome channel, which contains important information.
 
 _We hope you enjoy your stay_.`;
+
+  public static MSG_APPLICATION_NOT_ALLOWED = `unfortunately, your current roles do not allow an application. Please contact an admiral or officer!`;
 }

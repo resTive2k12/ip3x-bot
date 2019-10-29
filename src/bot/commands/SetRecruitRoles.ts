@@ -5,8 +5,8 @@ import { AbstractCommand } from './AbstractCommand';
 import { DiscordEvents } from '../core/DiscordEvents';
 import { Role } from '../api/storage';
 
-export class AddAdmin extends AbstractCommand {
-  public command = 'add-admin';
+export class SetRecruitRole extends AbstractCommand {
+  public command = 'set-recruit-roles';
   public aliases: string[] = [];
   public requiresBotMention = true;
   public requiresAdminAccess = true;
@@ -26,7 +26,7 @@ export class AddAdmin extends AbstractCommand {
     let parsed = this.parseMessageIntoParameters(message);
     parsed = parsed.slice(2);
     const entry = await this.db.fetch(message.guild.id);
-    const roles: Role[] = entry.adminRoles || [];
+    const roles: Role[] = entry.recruitRoles || [];
     parsed.forEach(async item => {
       const mentions = item.match(/^<((@(?:&?|!?))(\d+))>$/);
       if (mentions) {
@@ -36,21 +36,19 @@ export class AddAdmin extends AbstractCommand {
         }
         if (mentions[2] === '@&') {
           roles.push({ type: 'role', id: mentions[3] });
-        } else if (mentions[2] === '@!' || mentions[2] === '@') {
-          roles.push({ type: 'user', id: mentions[3] });
         } else {
-          console.debug(`${this.constructor.name}#onMessage ignoring mention ${mentions[0]}. It is not a role or user.`);
+          console.debug(`${this.constructor.name}#onMessage ignoring mention ${mentions[0]}. It is not a role.`);
         }
       }
     });
-    entry.adminRoles = roles;
+    entry.recruitRoles = roles;
     this.db
       .update(entry)
       .then(() => {
         message.channel.send('Successfully added.').catch(console.log);
       })
       .catch(rejected => {
-        message.channel.send('Failed to add access. Check protocol.').catch(console.log);
+        message.channel.send('Failed to add recruit role(s). Check protocol.').catch(console.log);
         console.error('Error saving adding admin access: ', rejected);
       });
   }
@@ -58,9 +56,9 @@ export class AddAdmin extends AbstractCommand {
   help(): HelpField[] {
     return [
       {
-        name: 'add-admin',
+        name: 'set-recruit-roles',
         value:
-          'The mentions of users and users are added to the group of users who can change the settings. Mentions of channels will be silently ignored.\n\n**Usage**: ```@IP3X-Assistant add-admin [@role...] [@user...]```'
+          'The mentions of groups a successful applicant gets assigned. Mentions of user and channels will be silently ignored.\n\n**Usage**: ```@IP3X-Assistant set-recruit-role [@role...]```'
       }
     ];
   }
