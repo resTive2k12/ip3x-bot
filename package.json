@@ -10,8 +10,8 @@
     "copy-sources": "cpx \"src/**/*.ts\" build && cpx src/tsconfig.json build",
     "dev": "nodemon --watch src -e ts,tsx --exec \"npx ts-node src/index.ts\"",
     "build": "npm run clean && npm run copy-images && npm run copy-sources",
-    "build:js": "npm run clean && tsc --build  ",
-    "docker": "npm run build && docker build -t thorstenst/ip3x-bot .",
+    "build:js": "npm run clean && npm run copy-images && tsc --build  ",
+    "docker": "npm run build:js && docker build -t thorstenst/ip3x-bot .",
     "test": "mocha -r ts-node/register test/**/*.ts"
   },
   "author": "",
