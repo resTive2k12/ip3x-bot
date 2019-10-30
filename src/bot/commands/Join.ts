@@ -34,7 +34,6 @@ export class Join extends AbstractCommand {
     joinMessage.member.send(Join.MSG_RESPONSE_1(member)).then(messages => {
       const msg = messages as Discord.Message;
       msg.react('✅').then(() => msg.react('❌'));
-      const channelId = '';
       joinMessage.channel
         .send(`${member}, i have sent you a direct message!`)
         .then(msg => {
