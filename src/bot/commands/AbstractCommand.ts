@@ -53,16 +53,21 @@ export abstract class AbstractCommand implements Command {
       return false;
     }
 
-    if (this.requiresAdminAccess && message.author && !(await this.isAdmin(message.member))) {
-      message.author.send(`You are not allowed to use the command '${this.command}'.`).catch(console.log);
-      return false;
-    }
-
     if (botIsMentioned) {
       cmd = args[1];
     }
 
-    return cmd === prefix + this.command || !!this.aliases.find(alias => cmd === prefix + alias);
+    const commandIdentified = cmd === prefix + this.command || !!this.aliases.find(alias => cmd === prefix + alias);
+
+    if (commandIdentified) {
+
+      if (this.requiresAdminAccess && message.author && !(await this.isAdmin(message.member))) {
+        message.reply(`you are not allowed to use the command '${this.command}'.`).catch(console.log);
+        return false;
+      }
+    }
+
+    return commandIdentified;
   }
 
   async isAdmin(author?: Discord.GuildMember): Promise<boolean> {
