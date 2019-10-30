@@ -15,31 +15,8 @@ export class Join extends AbstractCommand {
   constructor(client: Client) {
     super(client);
     this.listeners.push(DiscordEvents.MESSAGE);
-    this.listeners.push(DiscordEvents.GUILD_MEMBER_ADD);
-    this.listeners.push(DiscordEvents.GUILD_MEMBER_REMOVE);
     this.listeners.push(DiscordEvents.REACTION_ADD);
     this.listeners.push(DiscordEvents.REACTION_REMOVE);
-  }
-
-  async onGuildMemberAdd(member: Discord.GuildMember): Promise<void> {
-    const user: User = {
-      _id: member.id,
-      guildId: member.guild.id,
-      name: member.nickname || member.user.username,
-      joinedAt: member.joinedAt,
-      isBot: member.user.bot,
-      inSquadron: 'Not applied',
-      onInara: 'Not applied',
-      inaraName: member.nickname || member.user.username,
-      notified: 'Ignore',
-      applicationStep: 'Ignore',
-      comment: 'Just joined discord'
-    };
-    this.client.bot.userService.updateOrInsert(user).then(user => GoogleSheets.updateUser(this.client.bot.config, this.client.bot.config.sheets.members, user));
-    if (member.guild.systemChannel instanceof Discord.TextChannel) {
-      const channel = member.guild.systemChannel as Discord.TextChannel;
-      channel.send(Join.MSG_WELCOME(member)).catch(console.log);
-    }
   }
 
   async onMessage(joinMessage: Discord.Message): Promise<void> {
@@ -186,15 +163,6 @@ export class Join extends AbstractCommand {
       return;
     }
     console.debug(`Removed emoji ${reaction.emoji}, ${reaction.me}, ${user}`);
-  }
-
-  async onGuildMemberRemove(member: Discord.GuildMember): Promise<void> {
-    this.client.bot.userService.fetch(member.id).then(user => {
-      user.leftAt = new Date();
-      user.comment = '!!!Has left discord!!! ' + user.comment;
-      console.log('left:', user);
-      GoogleSheets.updateUser(this.client.bot.config, this.client.bot.config.sheets.members, user);
-    }).catch(reason => console.log('User load error', reason));
   }
 
   help(): HelpField[] {
