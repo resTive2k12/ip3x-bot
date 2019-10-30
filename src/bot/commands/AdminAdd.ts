@@ -27,6 +27,10 @@ export class AddAdmin extends AbstractCommand {
     parsed = parsed.slice(2);
     const entry = await this.db.fetch(message.guild.id);
     const roles: Role[] = entry.adminRoles || [];
+    if (!parsed || parsed.length == 0) {
+      message.reply("no user or roles were mentioned.");
+      return;
+    }
     parsed.forEach(async item => {
       const mentions = item.match(/^<((@(?:&?|!?))(\d+))>$/);
       if (mentions) {
