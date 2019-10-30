@@ -43,7 +43,7 @@ export class MemberController extends AbstractController {
           entry.notificationChannels.forEach(nc => {
             const channel = this.client.channels.get(nc.id);
             if (channel) {
-              (channel as Discord.TextChannel).send(`@here: the user ${member.nickname || member.user.username} has join discord.`);
+              (channel as Discord.TextChannel).send(`@here: the user ${member.nickname || member.user.username} has joined discord.`);
             }
           });
         }
@@ -69,7 +69,5 @@ export class MemberController extends AbstractController {
       });
     }).catch(reason => console.log('User load error', reason));
   }
-
-
 
 }
