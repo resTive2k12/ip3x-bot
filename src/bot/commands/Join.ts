@@ -16,6 +16,7 @@ export class Join extends AbstractCommand {
     super(client);
     this.listeners.push(DiscordEvents.MESSAGE);
     this.listeners.push(DiscordEvents.GUILD_MEMBER_ADD);
+    this.listeners.push(DiscordEvents.GUILD_MEMBER_REMOVE);
     this.listeners.push(DiscordEvents.REACTION_ADD);
     this.listeners.push(DiscordEvents.REACTION_REMOVE);
   }
@@ -29,7 +30,9 @@ export class Join extends AbstractCommand {
       isBot: member.user.bot,
       inSquadron: 'Not applied',
       onInara: 'Not applied',
+      inaraName: member.nickname || member.user.username,
       notified: 'Ignore',
+      applicationStep: 'Ignore',
       comment: 'Just joined discord'
     };
     this.client.bot.userService.updateOrInsert(user).then(user => GoogleSheets.updateUser(this.client.bot.config, this.client.bot.config.sheets.members, user));
@@ -67,11 +70,13 @@ export class Join extends AbstractCommand {
             .then(user => {
               user.onInara = 'Not checked';
               user.inSquadron = 'Not checked';
+              user.inaraName = '';
               user.notified = 'No';
               user.comment = 'Applied via !join command.';
+              user.applicationStep = 'Started';
               user.application = {
                 startAt: new Date(),
-                step: 'Started',
+
                 dmChannelId: channelId,
                 finishedAt: undefined
               };
@@ -102,7 +107,7 @@ export class Join extends AbstractCommand {
         const discordUser = this.client.users.get(user._id);
         if (!discordUser) return;
         if (!user.application) return;
-        switch (user.application.step) {
+        switch (user.applicationStep) {
           case 'Started':
             reaction.message.delete().then(() =>
               discordUser
@@ -112,7 +117,7 @@ export class Join extends AbstractCommand {
                   const msg = messages as Discord.Message;
                   msg.react('✅').then(() => msg.react('❌'));
                   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                  user.application!.step = 'In Progress';
+                  user.applicationStep = 'In Progress';
                   return user;
                 })
                 .then(user => {
@@ -130,7 +135,7 @@ export class Join extends AbstractCommand {
                 .send(Join.MSG_RESPONSE_4(discordUser))
                 .then(() => {
                   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                  user.application!.step = 'Applied';
+                  user.applicationStep = 'Applied';
                   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                   user.application!.finishedAt = new Date();
                   return user;
@@ -154,7 +159,7 @@ export class Join extends AbstractCommand {
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           user.application!.finishedAt = new Date();
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          user.application!.step = 'Cancelled';
+          user.applicationStep = 'Cancelled';
           user.onInara = 'Not applied';
           user.inSquadron = 'Not applied';
           user.notified = 'Ignore';
@@ -181,6 +186,15 @@ export class Join extends AbstractCommand {
       return;
     }
     console.debug(`Removed emoji ${reaction.emoji}, ${reaction.me}, ${user}`);
+  }
+
+  async onGuildMemberRemove(member: Discord.GuildMember): Promise<void> {
+    this.client.bot.userService.fetch(member.id).then(user => {
+      user.leftAt = new Date();
+      user.comment = '!!!Has left discord!!! ' + user.comment;
+      console.log('left:', user);
+      GoogleSheets.updateUser(this.client.bot.config, this.client.bot.config.sheets.members, user);
+    }).catch(reason => console.log('User load error', reason));
   }
 
   help(): HelpField[] {

@@ -41,6 +41,26 @@ export class GoogleSheets {
 
   public static async saveValues(config: BotConfig, sheet: Sheet, values: Array<Array<string | null>>): Promise<Array<Array<string | null>>> {
     return GoogleSheets.auth(config.credentials).then(jwt => {
+      values.sort((a, b) => {
+        if (a == null || b == null) {
+          return 0;
+        }
+        if (a[GoogleSheets.COL_ON_INARA] === 'Not checked' && b[GoogleSheets.COL_ON_INARA] !== 'Not checked') {
+          //console.log('a not checked');
+          return -1;
+        }
+        if (a[GoogleSheets.COL_ON_INARA] !== 'Not checked' && b[GoogleSheets.COL_ON_INARA] === 'Not checked') {
+          //console.log('b not checked');
+          return 1;
+        }
+        if ((a[GoogleSheets.COL_INARA_NAME] as string).startsWith('BOT<') && !(b[GoogleSheets.COL_INARA_NAME] as string).startsWith('BOT<')) {
+          return -11;
+        }
+        if (!(a[GoogleSheets.COL_INARA_NAME] as string).startsWith('BOT<') && (b[GoogleSheets.COL_INARA_NAME] as string).startsWith('BOT<')) {
+          return 1;
+        }
+        return a[GoogleSheets.COL_NAME]!.localeCompare(b[GoogleSheets.COL_NAME]!);
+      });
       const updateRequest = {
         spreadsheetId: sheet.id,
         auth: jwt,
@@ -90,9 +110,6 @@ export class GoogleSheets {
   public static setValue(col: number, value: string | null, currentArray: Array<string | null>): Array<string | null> {
     const newArray = currentArray;
     newArray[col] = value;
-    if (col == GoogleSheets.COL_APPLICATION_STATUS) {
-      console.log('value', value, col);
-    }
     return newArray;
   }
 
@@ -101,26 +118,33 @@ export class GoogleSheets {
     if (user._id) userArray[GoogleSheets.COL_ID] = user._id;
     userArray = GoogleSheets.setValue(GoogleSheets.COL_ID, user._id, userArray);
     userArray = GoogleSheets.setValue(GoogleSheets.COL_NAME, user.name, userArray);
-    userArray = GoogleSheets.setValue(GoogleSheets.COL_ON_INARA, user.onInara, userArray);
-    userArray = GoogleSheets.setValue(GoogleSheets.COL_INARA_NAME, user.inaraName ? user.inaraName : null, userArray);
-    userArray = GoogleSheets.setValue(GoogleSheets.COL_IN_SQUADRON, user.inSquadron, userArray);
+    userArray = GoogleSheets.setValue(GoogleSheets.COL_ON_INARA, user.onInara ? user.onInara : 'Not checked', userArray);
+    userArray = GoogleSheets.setValue(GoogleSheets.COL_INARA_NAME, user.inaraName ? user.inaraName : '', userArray);
+    userArray = GoogleSheets.setValue(GoogleSheets.COL_IN_SQUADRON, user.inSquadron ? user.inSquadron : 'Not checked', userArray);
     userArray = GoogleSheets.setValue(
       GoogleSheets.COL_COMMENT,
       user.comment ? user.comment : 'Found while syncing. Entry needs to be manually completed.',
       userArray
     );
-    console.log(user.name, user.joinedAt, formatDate(user.joinedAt));
     userArray = GoogleSheets.setValue(GoogleSheets.COL_JOINED, formatDate(user.joinedAt), userArray);
-
     userArray = GoogleSheets.setValue(GoogleSheets.COL_APPLICATION_USER_NOTIFIED, user.notified, userArray);
-    if (user.application) {
-      userArray = GoogleSheets.setValue(GoogleSheets.COL_APPLICATION_START, user.application.startAt ? formatDate(user.application.startAt) : 'iff', userArray);
-      userArray = GoogleSheets.setValue(GoogleSheets.COL_APPLICATION_STATUS, user.application.step, userArray);
+    if (user.leftAt) {
+      userArray = GoogleSheets.setValue(GoogleSheets.COL_LEFT, formatDate(user.leftAt), userArray);
+    }
+    if (user.application && user.applicationStep != 'Ignore') {
+      console.debug(`${user.name} has application`, user.application);
+      userArray = GoogleSheets.setValue(GoogleSheets.COL_APPLICATION_START, user.application.startAt ? formatDate(user.application.startAt) : '', userArray);
+      userArray = GoogleSheets.setValue(GoogleSheets.COL_APPLICATION_STATUS, user.applicationStep, userArray);
       userArray = GoogleSheets.setValue(
         GoogleSheets.COL_APPLICATION_FINISHED,
         user.application.finishedAt ? formatDate(user.application.finishedAt) : '',
         userArray
       );
+    } else {
+      console.debug(`${user.name} has <no> application`, user.application);
+      userArray[GoogleSheets.COL_APPLICATION_START] = '';
+      userArray[GoogleSheets.COL_APPLICATION_STATUS] = 'Ignore';
+      userArray[GoogleSheets.COL_APPLICATION_FINISHED] = '';
     }
     userArray = GoogleSheets.setValue(GoogleSheets.COL_LAST_UPDATE, formatDate(new Date()), userArray);
     return userArray;
@@ -137,17 +161,26 @@ export class GoogleSheets {
       inSquadron: userArray[GoogleSheets.COL_IN_SQUADRON] as Validation,
       isBot: userArray[GoogleSheets.COL_ON_INARA] === 'Bot',
       notified: userArray[GoogleSheets.COL_APPLICATION_USER_NOTIFIED] as Notification,
-      comment: userArray[GoogleSheets.COL_COMMENT] as string
+      comment: userArray[GoogleSheets.COL_COMMENT] as string,
+      applicationStep: userArray[GoogleSheets.COL_APPLICATION_STATUS] as ApplicationStep,
+
     };
 
-    if (userArray[GoogleSheets.COL_APPLICATION_STATUS]) {
+    if (userArray[GoogleSheets.COL_LEFT]) {
+      user.leftAt = new Date(Date.parse(userArray[GoogleSheets.COL_LEFT] as string));
+    }
+
+    if (userArray[GoogleSheets.COL_APPLICATION_STATUS] !== 'Ignore') {
       user.application = {
         startAt: new Date(Date.parse(userArray[GoogleSheets.COL_APPLICATION_START] as string)),
         finishedAt: userArray[GoogleSheets.COL_APPLICATION_FINISHED]
           ? new Date(Date.parse(userArray[GoogleSheets.COL_APPLICATION_FINISHED] as string))
           : undefined,
-        step: userArray[GoogleSheets.COL_APPLICATION_STATUS] as ApplicationStep
+
       };
+    } else {
+      user.applicationStep = 'Ignore';
+      user.application = undefined;
     }
 
     return user;

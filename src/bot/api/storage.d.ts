@@ -70,9 +70,9 @@ export interface User {
   inaraName?: string;
   inSquadron: Validation;
   notified: Notification;
+  applicationStep: ApplicationStep;
   application?: {
     startAt: Date;
-    step: ApplicationStep;
     finishedAt?: Date;
     canceledAt?: Date;
     dmChannelId?: string;

@@ -55,9 +55,10 @@ export class UserSync extends AbstractCommand {
     let newAcceptedUserCount = 0;
     let newDelayedUserCount = 0;
     GoogleSheets.readValues(this.client.bot.config, this.client.bot.config.sheets.members)
-      .then(rows => {
-        if (!rows) rows = [];
-        guild.members.forEach(async member => {
+      .then(async rows => {
+        if (!rows) { rows = []; console.debug('no rows specified...'); }
+        const dbGuild = await this.client.db.fetch(guild.id);
+        guild.members.forEach(member => {
           const idx = rows.findIndex(element => element != null && element[GoogleSheets.COL_ID] === member.id);
           if (idx >= 0) {
             //member was found in the sheet
@@ -66,28 +67,26 @@ export class UserSync extends AbstractCommand {
             if (this.isUnchecked(user)) {
               console.log(`${user.name} is unchecked...`);
               knownUncheckedUserCount += 1;
-            }
-            if (!this.isNotified(user)) {
+            } else if (!this.isNotified(user)) {
               console.log(`${user.name} is not notified...`);
               if (this.isAccepted(user)) {
                 console.log(`${user.name} got accepted...`);
                 newAcceptedUserCount += 1;
                 const dUser = this.client.users.get(user._id) as Discord.User;
                 user.notified = 'Yes';
-                if (user.application) user.application.step = 'Finished';
+                if (user.application) user.applicationStep = 'Finished';
                 dUser.send(UserSync.WELCOME_MSG(dUser));
-                const dbGuild = await this.client.db.fetch(guild.id);
+
                 if (dbGuild.recruitRoles) {
                   dbGuild.recruitRoles.forEach(role => {
                     member.addRole(role.id);
                   });
                 }
-                console.debug(`User ${user.name} got accepted`);
               } else if (this.isDelayed(user)) {
                 console.log(`${user} got rejected...`);
                 const dUser = this.client.users.get(user._id) as Discord.User;
                 user.notified = 'Yes';
-                user.application!.step = 'Rejected';
+                user.applicationStep = 'Rejected';
                 user.comment = 'User got automatically rejected. Application took longer than "allowed".';
                 dUser.send(UserSync.MSG_REJECTED);
                 newDelayedUserCount += 1;
@@ -196,11 +195,8 @@ export class UserSync extends AbstractCommand {
 
   private isAccepted(user: User): boolean {
     let accepted = user.inSquadron === 'Yes';
-    console.log('in squadron', accepted);
     accepted = accepted && user.onInara === 'Yes';
-    console.log('in squadron', accepted);
     accepted = accepted && !!user.inaraName;
-    console.log('inaraname', accepted, user.inaraName);
     return accepted;
   }
 
@@ -213,6 +209,8 @@ export class UserSync extends AbstractCommand {
     if (!user.application) return false;
     //If user finished application no delay warning
     if (user.application.finishedAt) return false;
+    //If user has not started yet
+    if (!user.application.startAt) return false;
     const delay = this.dateDiff(user.application.startAt, new Date());
     console.debug(`User ${user.name} is delayed by ${delay} days...`);
     return delay > 3;
@@ -234,7 +232,10 @@ export class UserSync extends AbstractCommand {
       onInara: member.user.bot ? 'Bot' : 'Not checked',
       inSquadron: member.user.bot ? 'Bot' : 'Not checked',
       notified: member.user.bot ? 'Bot' : 'Ignore',
-      comment: member.user.bot ? 'Bot user. Do not modify!' : 'Found at synchronization. This user is "unchecked" but will never be notified, unless changed to "No".'
+      inaraName: member.user.bot ? 'BOT <' + member.user.username + '>' : member.nickname || member.user.username,
+      comment: member.user.bot ? 'Bot user. Do not modify!' : 'Found at synchronization. This user is "unchecked" but will never be notified, unless changed to "No".',
+      applicationStep: 'Ignore',
+      application: undefined
     };
     return user;
   }
