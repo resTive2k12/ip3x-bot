@@ -82,25 +82,6 @@ export class Join extends AbstractCommand {
             .catch(console.log);
         })
         .catch(console.log);
-      /*this.client.db
-        .fetchUser(guildId, member.id)
-        .then(user => {
-          user.onInara = 'Not checked';
-          user.inSquadron = 'Not checked';
-          user.inaraName = '<no name specified>';
-          user.notified = 'No';
-          user.application = {
-            startAt: new Date(),
-            step: 'Started',
-            dmChannelId: msg.channel.id,
-            msgId: msg.id
-          };
-          return user;
-        })
-        .then(user => this.client.db.updateUser(guildId, user))
-        .then(user => {
-          return GoogleSheets.updateUser(this.client.bot.config, this.client.bot.config.sheets.members, user);
-        });*/
     });
   }
 
@@ -149,7 +130,7 @@ export class Join extends AbstractCommand {
                 .send(Join.MSG_RESPONSE_4(discordUser))
                 .then(() => {
                   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                  user.application!.step = 'Finished';
+                  user.application!.step = 'Applied';
                   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                   user.application!.finishedAt = new Date();
                   return user;
@@ -188,105 +169,6 @@ export class Join extends AbstractCommand {
         })
         .catch(console.log);
     }
-    /*
-      this.client.db.getInstance().find({ 'users.id': user.id, 'users.application': { $exists: true } } as any, (err: any, docs: any) => {
-        if (!docs || docs.length == 0) {
-          //no user found, nothing to do. the error happened somewhere else.
-          console.log('no application found for user: ', user.id);
-          return;
-        }
-        if (docs.length > 1) {
-          user.send(`https://giphy.com/gifs/theviralfever-funny-lol-meme-jaeVcsuCOI2i5Yn0w5`).catch(console.log);
-        }
-        const doc = docs[0] as GuildEntry;
-        this.client.db.fetchUser(doc._id, user.id).then(storedUser => {
-          if (!storedUser.application) {
-            //no application found, nothing to do. the error happened somewhere else.
-            console.log('no application found for user: ', storedUser.id);
-            return;
-          }
-          switch (storedUser.application.step) {
-            case 'Started':
-              reaction.message.delete().then(() =>
-                user
-                  .send(Join.MSG_RESPONSE_2)
-                  .then(() => user.send({ embed: { description: Join.MSG_RESPONSE_3 } }))
-                  .then(messages => {
-                    const msg = messages as Discord.Message;
-                    msg.react('✅').then(() => msg.react('❌'));
-                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                    storedUser.application!.step = 'In Progress';
-                    return storedUser;
-                  })
-                  .then(user => {
-                    return this.client.db.updateUser(doc._id, user);
-                  })
-                  .then(user => {
-                    return GoogleSheets.updateUser(this.client.bot.config, this.client.bot.config.sheets.members, user);
-                  })
-                  .catch(console.log)
-              );
-              break;
-            case 'In Progress':
-              reaction.message.delete().then(() =>
-                user
-                  .send(Join.MSG_RESPONSE_4(user))
-                  .then(() => {
-                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                    storedUser.application!.step = 'Finished';
-                    storedUser.application!.finishedAt = new Date();
-                    return storedUser;
-                  })
-                  .then(user => {
-                    return this.client.db.updateUser(doc._id, user);
-                  })
-                  .then(user => {
-                    return GoogleSheets.updateUser(this.client.bot.config, this.client.bot.config.sheets.members, user);
-                  })
-                  .catch(console.log)
-              );
-              break;
-          }
-        });
-      });
-    } else if (emoji === '❌') {
-      user.send(Join.MSG_CANCEL_APPLICATION).catch(console.log);
-      this.client.db.getInstance().find({ 'users.id': user.id, 'users.application': { $exists: true } }, (err: any, docs: any) => {
-        if (!docs || docs.length == 0) {
-          //no user found, nothing to do. the error happened somewhere else.
-          console.log('no application found for user: ', user.id);
-          return;
-        }
-        if (docs.length > 1) {
-          console.log('multiple users found', docs);
-          user.send(`https://giphy.com/gifs/theviralfever-funny-lol-meme-jaeVcsuCOI2i5Yn0w5`).catch(console.log);
-        }
-        const doc = docs[0] as GuildEntry;
-        this.client.db
-          .fetchUser(doc._id, user.id)
-          .then(user => {
-            if (!user.application) {
-              //no application found, nothing to do. the error happened somewhere else.
-              console.log('no application found for user: ', user.id);
-              return;
-            }
-            user.application.canceledAt = new Date();
-            user.application.step = 'Cancelled';
-            return user;
-          })
-          .then(user => {
-            if (user) return this.client.db.updateUser(doc._id, user);
-          })
-          .then(user => {
-            if (user) return GoogleSheets.updateUser(this.client.bot.config, this.client.bot.config.sheets.members, user);
-          });
-      });
-    } else {
-      console.debug('Unknown emoji: ', emoji);
-    }*/
-
-    //console.log(reaction.emoji.id, reaction.emoji.identifier, reaction.emoji.name);
-    //console.debug(`Added emoji ${reaction.emoji}, ${reaction.me}, ${user}`);
   }
 
   onReactionRemove(reaction: Discord.MessageReaction, user: Discord.User): void {

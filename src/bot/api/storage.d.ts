@@ -55,7 +55,7 @@ export interface MissionEntry {
 export type Notification = 'Yes' | 'No' | 'Ignore' | 'Bot' | 'Envoy' | 'Not applied';
 export type NotChecked = 'Not checked';
 export type Validation = Notification | NotChecked;
-export type ApplicationStep = 'Error' | 'Started' | 'In Progress' | 'Finished' | 'Ignore' | 'Cancelled' | 'Rejected';
+export type ApplicationStep = 'Error' | 'Started' | 'In Progress' | 'Finished' | 'Ignore' | 'Cancelled' | 'Rejected' | 'Applied';
 
 export interface User {
   _id: string;

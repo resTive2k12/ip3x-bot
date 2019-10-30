@@ -74,7 +74,7 @@ export class UserSync extends AbstractCommand {
                 newAcceptedUserCount += 1;
                 const dUser = this.client.users.get(user._id) as Discord.User;
                 user.notified = 'Yes';
-
+                if (user.application) user.application.step = 'Finished';
                 dUser.send(UserSync.WELCOME_MSG(dUser));
                 const dbGuild = await this.client.db.fetch(guild.id);
                 if (dbGuild.recruitRoles) {
