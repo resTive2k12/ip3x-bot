@@ -87,64 +87,6 @@ export class GoogleSheets {
       .catch(console.log);
   }
 
-  public static fromDbToSheet(row: (string | null)[], user: User): { changed: boolean; row: (string | null)[] } {
-    const changedContent: number[] = [];
-    if (row[GoogleSheets.COL_ID] !== user._id) {
-      row[GoogleSheets.COL_ID] = user._id;
-      changedContent.push(GoogleSheets.COL_ID);
-    }
-    if (row[GoogleSheets.COL_NAME] !== user.name) {
-      row[GoogleSheets.COL_NAME] = user.name;
-      changedContent.push(GoogleSheets.COL_NAME);
-    }
-    if (row[GoogleSheets.COL_JOINED] !== formatDate(user.joinedAt)) {
-      row[GoogleSheets.COL_JOINED] = formatDate(user.joinedAt);
-      changedContent.push(GoogleSheets.COL_JOINED);
-    }
-    if (user.leftAt && row[GoogleSheets.COL_LEFT] !== formatDate(user.leftAt)) {
-      row[GoogleSheets.COL_LEFT] = formatDate(user.leftAt);
-      changedContent.push(GoogleSheets.COL_LEFT);
-    }
-    if (user.application && row[GoogleSheets.COL_APPLICATION_START] !== formatDate(user.application.startAt)) {
-      row[GoogleSheets.COL_APPLICATION_START] = formatDate(user.application.startAt);
-      changedContent.push(GoogleSheets.COL_APPLICATION_START);
-    }
-    if (user.comment && row[GoogleSheets.COL_COMMENT] !== user.comment) {
-      row[GoogleSheets.COL_COMMENT] = user.comment;
-      changedContent.push(GoogleSheets.COL_COMMENT);
-    }
-    if (user.application && row[GoogleSheets.COL_APPLICATION_STATUS] != user.application.step) {
-      row[GoogleSheets.COL_APPLICATION_STATUS] = user.application.step;
-      changedContent.push(GoogleSheets.COL_APPLICATION_STATUS);
-    }
-    if (row[GoogleSheets.COL_ON_INARA] != (user.onInara || 'Not checked')) {
-      row[GoogleSheets.COL_ON_INARA] = user.onInara || 'Not checked';
-      changedContent.push(GoogleSheets.COL_ON_INARA);
-    }
-    if (row[GoogleSheets.COL_IN_SQUADRON] != (user.inSquadron || 'Not checked')) {
-      row[GoogleSheets.COL_IN_SQUADRON] = user.inSquadron || 'Not checked';
-      changedContent.push(GoogleSheets.COL_IN_SQUADRON);
-    }
-    if (row[GoogleSheets.COL_INARA_NAME] != (user.inaraName || '')) {
-      row[GoogleSheets.COL_INARA_NAME] = user.inaraName || '';
-      changedContent.push(GoogleSheets.COL_INARA_NAME);
-    }
-    if (row[GoogleSheets.COL_APPLICATION_USER_NOTIFIED] != user.notified) {
-      row[GoogleSheets.COL_APPLICATION_USER_NOTIFIED] = user.notified;
-      changedContent.push(GoogleSheets.COL_APPLICATION_USER_NOTIFIED);
-    }
-    if (user.application && user.application.finishedAt && row[GoogleSheets.COL_APPLICATION_FINISHED] !== formatDate(user.application.finishedAt)) {
-      row[GoogleSheets.COL_APPLICATION_FINISHED] = formatDate(user.application.finishedAt);
-      changedContent.push(GoogleSheets.COL_APPLICATION_FINISHED);
-    }
-
-    if (changedContent.length > 0) {
-      row[GoogleSheets.COL_LAST_UPDATE] = formatDate(new Date()) + ' - columns:' + changedContent.join(',');
-      return { changed: true, row: row };
-    }
-    return { changed: false, row: row };
-  }
-
   public static setValue(col: number, value: string | null, currentArray: Array<string | null>): Array<string | null> {
     const newArray = currentArray;
     newArray[col] = value;
