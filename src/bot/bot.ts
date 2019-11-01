@@ -35,13 +35,10 @@ export class Bot {
 
   start(): void {
     this.discordClient.on('ready', this.onReady.bind(this));
-
     this.discordClient.login(this.config.token).catch(error => console.error('Error logging in the bot'));
   }
 
   onReady(): void {
-    this.logger.info(`Bot is ready.\n\t ${this.commands.length} commands and ${this.controllers.length} controllers.`);
-
     const storageController = new StorageController(this.discordClient);
     storageController.initializeListeners();
     this.controllers.push(storageController);
