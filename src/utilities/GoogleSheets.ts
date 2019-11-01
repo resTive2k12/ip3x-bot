@@ -132,7 +132,7 @@ export class GoogleSheets {
       userArray = GoogleSheets.setValue(GoogleSheets.COL_LEFT, formatDate(user.leftAt), userArray);
     }
     if (user.application && user.applicationStep != 'Ignore') {
-      console.debug(`${user.name} has application`, user.application);
+      //console.debug(`${user.name} has application`, user.application);
       userArray = GoogleSheets.setValue(GoogleSheets.COL_APPLICATION_START, user.application.startAt ? formatDate(user.application.startAt) : '', userArray);
       userArray = GoogleSheets.setValue(GoogleSheets.COL_APPLICATION_STATUS, user.applicationStep, userArray);
       userArray = GoogleSheets.setValue(
@@ -141,7 +141,7 @@ export class GoogleSheets {
         userArray
       );
     } else {
-      console.debug(`${user.name} has <no> application`, user.application);
+      //console.debug(`${user.name} has <no> application`, user.application);
       userArray[GoogleSheets.COL_APPLICATION_START] = '';
       userArray[GoogleSheets.COL_APPLICATION_STATUS] = 'Ignore';
       userArray[GoogleSheets.COL_APPLICATION_FINISHED] = '';
@@ -162,8 +162,7 @@ export class GoogleSheets {
       isBot: userArray[GoogleSheets.COL_ON_INARA] === 'Bot',
       notified: userArray[GoogleSheets.COL_APPLICATION_USER_NOTIFIED] as Notification,
       comment: userArray[GoogleSheets.COL_COMMENT] as string,
-      applicationStep: userArray[GoogleSheets.COL_APPLICATION_STATUS] as ApplicationStep,
-
+      applicationStep: userArray[GoogleSheets.COL_APPLICATION_STATUS] as ApplicationStep
     };
 
     if (userArray[GoogleSheets.COL_LEFT]) {
@@ -175,8 +174,7 @@ export class GoogleSheets {
         startAt: new Date(Date.parse(userArray[GoogleSheets.COL_APPLICATION_START] as string)),
         finishedAt: userArray[GoogleSheets.COL_APPLICATION_FINISHED]
           ? new Date(Date.parse(userArray[GoogleSheets.COL_APPLICATION_FINISHED] as string))
-          : undefined,
-
+          : undefined
       };
     } else {
       user.applicationStep = 'Ignore';
