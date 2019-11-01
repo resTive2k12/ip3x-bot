@@ -274,7 +274,12 @@ export class UserSync extends AbstractCommand {
   }
 
   help(): HelpField[] {
-    return [{ name: this.client.bot.config.prefix + this.command, value: 'Unspecified help' }];
+    return [
+      {
+        name: 'user-sync',
+        value: 'Synchronizes users with the google sheet document\n\n**Usage**: ```@IP3X-Assistant user-sync```'
+      }
+    ];
   }
 
   public static WELCOME_MSG = (x: Discord.User): string => `**Welcome to IP3X, CMDR ${x} o7**

@@ -54,9 +54,8 @@ export class NotificationAdd extends AbstractCommand {
   help(): HelpField[] {
     return [
       {
-        name: 'add-admin',
-        value:
-          'The mentions of users and users are added to the group of users who can change the settings. Mentions of channels will be silently ignored.\n\n**Usage**: ```@IP3X-Assistant add-admin [@role...] [@user...]```'
+        name: 'add-notify',
+        value: 'The mentions of channels which are added to the notification.\n\n**Usage**: ```@IP3X-Assistant add-notify #channel [...#channel]```'
       }
     ];
   }

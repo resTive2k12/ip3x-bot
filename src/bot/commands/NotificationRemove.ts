@@ -56,10 +56,8 @@ export class NotificationRemove extends AbstractCommand {
   help(): HelpField[] {
     return [
       {
-        name: 'add-admin',
-        value:
-          'The mentions of users and users are removed from the group of users who can change the settings. Mentions of channels will be silently ignored.' +
-          '\n\n**Usage**: ```@IP3X-Assistant remove-admin [@role...] [@user...]```'
+        name: 'remove-notify',
+        value: 'The mentions of channels which are removed from the notification.\n\n**Usage**: ```@IP3X-Assistant remove-notify #channel [...#channel]```'
       }
     ];
   }
