@@ -49,6 +49,7 @@ export class UserSync extends AbstractCommand {
     let knownUncheckedUserCount = 0;
     let knownCheckedUserCount = 0;
     let knownSpecialUserCount = 0;
+    let knownNotAppliedCount = 0;
     let knownBotUserCount = 0;
     let ignoredUserCount = 0;
     let unknownUserCount = 0;
@@ -95,22 +96,25 @@ export class UserSync extends AbstractCommand {
                 newDelayedUserCount += 1;
               }
             } else if (this.isUnchecked(user)) {
-              console.log(`${user.name} is unchecked...`);
+              //console.log(`${user.name} is unchecked...`);
               knownUncheckedUserCount += 1;
             } else if (this.isChecked(user)) {
-              console.log(`${user.name} is checked...`);
+              //console.log(`${user.name} is checked...`);
               knownCheckedUserCount += 1;
             } else if (this.isBot(user)) {
-              console.log(`${user.name} is bot...`);
+              //console.log(`${user.name} is bot...`);
               knownBotUserCount += 1;
+            } else if (this.notApplied(user)) {
+              //console.log(`${user.name} has not applied...`);
+              knownNotAppliedCount += 1;
             } else if (this.isSpecial(user)) {
-              console.log(`${user.name} is special...`);
+              //console.log(`${user.name} is special...`);
               knownSpecialUserCount += 1;
             } else if (this.isIgnored(user)) {
-              console.log(`${user.name} is ignored...`);
+              //console.log(`${user.name} is ignored...`);
               ignoredUserCount += 1;
             } else {
-              console.log(`${user.name} is unknown...`);
+              //console.log(`${user.name} is unknown...`);
               unknownUserCount += 1;
             }
 
@@ -133,42 +137,59 @@ export class UserSync extends AbstractCommand {
       .then(rows => {
         GoogleSheets.saveValues(this.client.bot.config, this.client.bot.config.sheets.members, rows)
           .then(values => {
+            const embed = {
+              title: ':white_check_mark: User synchronization succeeded.',
+              description:
+                '[GoogleDrive - Document](https://docs.google.com/spreadsheets/d/' +
+                this.client.bot.config.sheets.members.id +
+                " 'Members list on google drive')",
+              fields: new Array<any>(),
+              footer: {
+                text: 'Parsed from GoogleDrive',
+                // eslint-disable-next-line @typescript-eslint/camelcase
+                icon_url: 'http://icons.iconarchive.com/icons/marcus-roberto/google-play/256/Google-Drive-icon.png'
+              }
+            };
+            if (newUncheckedUserCount > 0 || knownUncheckedUserCount) {
+              embed.fields.push({
+                name: '__Unchecked users__',
+                value: `There are **${newUncheckedUserCount}** __new__ unchecked users and **${knownUncheckedUserCount}** __known__ unchecked users.`,
+                inline: false
+              });
+            }
+            if (newAcceptedUserCount > 0 || newDelayedUserCount > 0) {
+              embed.fields.push({
+                name: '__Notified users__',
+                value: `There are **${newAcceptedUserCount}** users __accepted__ and **${newDelayedUserCount}** __delayed users__ rejected.`
+              });
+            }
+            if (knownCheckedUserCount > 0 || knownSpecialUserCount > 0) {
+              embed.fields.push({
+                name: '__Checked or special users__',
+                value: `There are **${knownCheckedUserCount}** users __checked__ and **${knownSpecialUserCount}** users with __special roles__.`
+              });
+            }
+            if (ignoredUserCount > 0 || knownBotUserCount > 0) {
+              embed.fields.push({
+                name: '__Ignored or Bot users__',
+                value: `There are **${ignoredUserCount}** __ignored__ users and **${knownBotUserCount}** users identified as __bots__.`
+              });
+            }
+            if (knownNotAppliedCount > 0) {
+              embed.fields.push({
+                name: '__Users how have not applied__',
+                value: `There are **${knownNotAppliedCount}** user who have not applied.`
+              });
+            }
+            if (unknownUserCount > 0) {
+              embed.fields.push({
+                name: '__Unknown__',
+                value: `There are **${unknownUserCount}** users with a __not specified__ status.`
+              });
+            }
             return message
               .reply({
-                embed: {
-                  title: ':white_check_mark: User synchronization succeeded.',
-                  description:
-                    '[GoogleDrive - Document](https://docs.google.com/spreadsheets/d/' +
-                    this.client.bot.config.sheets.members.id +
-                    " 'Members list on google drive')",
-                  fields: [
-                    {
-                      name: '__Unchecked users__',
-                      value: `There are **${newUncheckedUserCount}** __new__ unchecked users and **${knownUncheckedUserCount}** __known__ unchecked users.`
-                    },
-                    {
-                      name: '__Notified users__',
-                      value: `There are **${newAcceptedUserCount}** users __accepted__ and **${newDelayedUserCount}** __delayed users__ rejected.`
-                    },
-                    {
-                      name: '__Checked or special users__',
-                      value: `There are **${knownCheckedUserCount}** users __checked__ and **${knownSpecialUserCount}** users with __special roles__.`
-                    },
-                    {
-                      name: '__Ignored or Bot users__',
-                      value: `There are **${ignoredUserCount}** __ignored__ users and **${knownBotUserCount}** users identified as __bots__.`
-                    },
-                    {
-                      name: '__Unknown states__',
-                      value: `There are **${unknownUserCount}** users with a __not specified__ status.`
-                    }
-                  ],
-                  footer: {
-                    text: 'Parsed from GoogleDrive',
-                    // eslint-disable-next-line @typescript-eslint/camelcase
-                    icon_url: 'http://icons.iconarchive.com/icons/marcus-roberto/google-play/256/Google-Drive-icon.png'
-                  }
-                }
+                embed: embed
               })
               .then(() => /*message.delete()*/ console.log('maybe delete msg'));
           })
@@ -181,6 +202,10 @@ export class UserSync extends AbstractCommand {
 
   private isUnchecked(user: User): boolean {
     return user.onInara === 'Not checked' || user.inSquadron === 'Not checked';
+  }
+
+  private notApplied(user: User): boolean {
+    return user.onInara === 'Not applied' || user.inSquadron === 'Not applied';
   }
 
   private isChecked(user: User): boolean {
