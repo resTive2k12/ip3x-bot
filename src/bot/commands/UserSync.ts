@@ -56,7 +56,10 @@ export class UserSync extends AbstractCommand {
     let newDelayedUserCount = 0;
     GoogleSheets.readValues(this.client.bot.config, this.client.bot.config.sheets.members)
       .then(async rows => {
-        if (!rows) { rows = []; console.debug('no rows specified...'); }
+        if (!rows) {
+          rows = [];
+          console.debug('no rows specified...');
+        }
         const dbGuild = await this.client.db.fetch(guild.id);
         guild.members.forEach(member => {
           const idx = rows.findIndex(element => element != null && element[GoogleSheets.COL_ID] === member.id);
@@ -64,10 +67,7 @@ export class UserSync extends AbstractCommand {
             //member was found in the sheet
             const user = GoogleSheets.arrayToUser(rows[idx], guild);
             user.name = member.nickname || member.user.username;
-            if (this.isUnchecked(user)) {
-              console.log(`${user.name} is unchecked...`);
-              knownUncheckedUserCount += 1;
-            } else if (!this.isNotified(user)) {
+            if (!this.isNotified(user)) {
               console.log(`${user.name} is not notified...`);
               if (this.isAccepted(user)) {
                 console.log(`${user.name} got accepted...`);
@@ -87,10 +87,16 @@ export class UserSync extends AbstractCommand {
                 const dUser = this.client.users.get(user._id) as Discord.User;
                 user.notified = 'Yes';
                 user.applicationStep = 'Rejected';
+                user.inaraName = user.name;
+                user.onInara = 'Not applied';
+                user.inSquadron = 'Not applied';
                 user.comment = 'User got automatically rejected. Application took longer than "allowed".';
                 dUser.send(UserSync.MSG_REJECTED);
                 newDelayedUserCount += 1;
               }
+            } else if (this.isUnchecked(user)) {
+              console.log(`${user.name} is unchecked...`);
+              knownUncheckedUserCount += 1;
             } else if (this.isChecked(user)) {
               console.log(`${user.name} is checked...`);
               knownCheckedUserCount += 1;
@@ -233,7 +239,9 @@ export class UserSync extends AbstractCommand {
       inSquadron: member.user.bot ? 'Bot' : 'Not checked',
       notified: member.user.bot ? 'Bot' : 'Ignore',
       inaraName: member.user.bot ? 'BOT <' + member.user.username + '>' : member.nickname || member.user.username,
-      comment: member.user.bot ? 'Bot user. Do not modify!' : 'Found at synchronization. This user is "unchecked" but will never be notified, unless changed to "No".',
+      comment: member.user.bot
+        ? 'Bot user. Do not modify!'
+        : 'Found at synchronization. This user is "unchecked" but will never be notified, unless changed to "No".',
       applicationStep: 'Ignore',
       application: undefined
     };
