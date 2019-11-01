@@ -45,20 +45,29 @@ export class GoogleSheets {
         if (a == null || b == null) {
           return 0;
         }
-        if (a[GoogleSheets.COL_ON_INARA] === 'Not checked' && b[GoogleSheets.COL_ON_INARA] !== 'Not checked') {
-          //console.log('a not checked');
-          return -1;
+
+        if (a[GoogleSheets.COL_ON_INARA] === 'Not checked' && b[GoogleSheets.COL_ON_INARA] === 'Not checked') {
+          return a[GoogleSheets.COL_NAME]!.localeCompare(b[GoogleSheets.COL_NAME]!);
+        } else {
+          if (a[GoogleSheets.COL_ON_INARA] === 'Not checked') {
+            return -1;
+          }
+          if (b[GoogleSheets.COL_ON_INARA] === 'Not checked') {
+            return 1;
+          }
         }
-        if (a[GoogleSheets.COL_ON_INARA] !== 'Not checked' && b[GoogleSheets.COL_ON_INARA] === 'Not checked') {
-          //console.log('b not checked');
-          return 1;
+
+        if (a[GoogleSheets.COL_ON_INARA] == 'Bot' && b[GoogleSheets.COL_ON_INARA] == 'Bot') {
+          return a[GoogleSheets.COL_NAME]!.localeCompare(b[GoogleSheets.COL_NAME]!);
+        } else {
+          if (a[GoogleSheets.COL_ON_INARA] == 'Bot') {
+            return 1;
+          }
+          if (b[GoogleSheets.COL_ON_INARA] == 'Bot') {
+            return -1;
+          }
         }
-        if ((a[GoogleSheets.COL_INARA_NAME] as string).startsWith('BOT<') && !(b[GoogleSheets.COL_INARA_NAME] as string).startsWith('BOT<')) {
-          return -11;
-        }
-        if (!(a[GoogleSheets.COL_INARA_NAME] as string).startsWith('BOT<') && (b[GoogleSheets.COL_INARA_NAME] as string).startsWith('BOT<')) {
-          return 1;
-        }
+
         return a[GoogleSheets.COL_NAME]!.localeCompare(b[GoogleSheets.COL_NAME]!);
       });
       const updateRequest = {
