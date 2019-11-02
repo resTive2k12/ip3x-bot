@@ -241,11 +241,8 @@ export class UserSync extends AbstractCommand {
 
   private isNotAccepted(user: User): boolean {
     let accepted = user.inSquadron === 'No';
-    console.log(user.name, accepted);
     accepted = accepted && user.onInara === 'No';
-    console.log(user.name, accepted);
     accepted = accepted && !!user.inaraName;
-    console.log(user.name, accepted);
     return accepted;
   }
 
