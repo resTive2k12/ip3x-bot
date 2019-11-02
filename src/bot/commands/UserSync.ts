@@ -55,6 +55,8 @@ export class UserSync extends AbstractCommand {
     let unknownUserCount = 0;
     let newAcceptedUserCount = 0;
     let newDelayedUserCount = 0;
+    let newNotAccteptedUserCount = 0;
+    let knownNotAccteptedUserCount = 0;
     GoogleSheets.readValues(this.client.bot.config, this.client.bot.config.sheets.members)
       .then(async rows => {
         if (!rows) {
@@ -68,10 +70,11 @@ export class UserSync extends AbstractCommand {
             //member was found in the sheet
             const user = GoogleSheets.arrayToUser(rows[idx], guild);
             user.name = member.nickname || member.user.username;
+            console.log(user.name, 'noitified', this.isNotified(user));
             if (!this.isNotified(user)) {
               console.log(`${user.name} is not notified...`);
               if (this.isAccepted(user)) {
-                console.log(`${user.name} got accepted...`);
+                //console.log(`${user.name} got accepted...`);
                 newAcceptedUserCount += 1;
                 const dUser = this.client.users.get(user._id) as Discord.User;
                 user.notified = 'Yes';
@@ -84,7 +87,7 @@ export class UserSync extends AbstractCommand {
                   });
                 }
               } else if (this.isDelayed(user)) {
-                console.log(`${user} got rejected...`);
+                //console.log(`${user} got rejected...`);
                 const dUser = this.client.users.get(user._id) as Discord.User;
                 user.notified = 'Yes';
                 user.applicationStep = 'Rejected';
@@ -94,6 +97,15 @@ export class UserSync extends AbstractCommand {
                 user.comment = 'User got automatically rejected. Application took longer than "allowed".';
                 dUser.send(UserSync.MSG_REJECTED);
                 newDelayedUserCount += 1;
+              } else if (this.isNotAccepted(user)) {
+                //console.log(`${user.name} is unchecked...`);
+                const dUser = this.client.users.get(user._id) as Discord.User;
+                user.notified = 'Yes';
+                user.applicationStep = 'Error';
+                user.inaraName = user.name;
+                user.comment = 'User got not accepted and has been notified via the bot.';
+                dUser.send(UserSync.MSG_FAIL(dUser));
+                newNotAccteptedUserCount += 1;
               }
             } else if (this.isUnchecked(user)) {
               //console.log(`${user.name} is unchecked...`);
@@ -101,6 +113,8 @@ export class UserSync extends AbstractCommand {
             } else if (this.isChecked(user)) {
               //console.log(`${user.name} is checked...`);
               knownCheckedUserCount += 1;
+            } else if (this.isNotAccepted(user)) {
+              knownNotAccteptedUserCount += 1;
             } else if (this.isBot(user)) {
               //console.log(`${user.name} is bot...`);
               knownBotUserCount += 1;
@@ -160,13 +174,25 @@ export class UserSync extends AbstractCommand {
             if (newAcceptedUserCount > 0 || newDelayedUserCount > 0) {
               embed.fields.push({
                 name: '__Notified users__',
-                value: `There are **${newAcceptedUserCount}** users __accepted__ and **${newDelayedUserCount}** __delayed users__ rejected.`
+                value: `There are **${newAcceptedUserCount}** users __accepted__ :white_check_mark: and **${newDelayedUserCount}** __delayed users__ rejected :x:.`
+              });
+            }
+            if (newNotAccteptedUserCount > 0) {
+              embed.fields.push({
+                name: '__Users who have not been accepted__ :warning:',
+                value: `There are **${newNotAccteptedUserCount}** users who have not been accepted and **need special treatment**.`
               });
             }
             if (knownCheckedUserCount > 0 || knownSpecialUserCount > 0) {
               embed.fields.push({
                 name: '__Checked or special users__',
                 value: `There are **${knownCheckedUserCount}** users __checked__ and **${knownSpecialUserCount}** users with __special roles__.`
+              });
+            }
+            if (knownNotAccteptedUserCount > 0) {
+              embed.fields.push({
+                name: '__Users how have not been accepted__',
+                value: `There are **${knownNotAccteptedUserCount}** users who have not been accepted.`
               });
             }
             if (ignoredUserCount > 0 || knownBotUserCount > 0) {
@@ -178,9 +204,10 @@ export class UserSync extends AbstractCommand {
             if (knownNotAppliedCount > 0) {
               embed.fields.push({
                 name: '__Users how have not applied__',
-                value: `There are **${knownNotAppliedCount}** user who have not applied.`
+                value: `There are **${knownNotAppliedCount}** users who have not applied.`
               });
             }
+
             if (unknownUserCount > 0) {
               embed.fields.push({
                 name: '__Unknown__',
@@ -210,6 +237,16 @@ export class UserSync extends AbstractCommand {
 
   private isChecked(user: User): boolean {
     return user.onInara === 'Yes' && user.inSquadron === 'Yes';
+  }
+
+  private isNotAccepted(user: User): boolean {
+    let accepted = user.inSquadron === 'No';
+    console.log(user.name, accepted);
+    accepted = accepted && user.onInara === 'No';
+    console.log(user.name, accepted);
+    accepted = accepted && !!user.inaraName;
+    console.log(user.name, accepted);
+    return accepted;
   }
 
   private isSpecial(user: User): boolean {
@@ -313,7 +350,7 @@ It is useful to join our Private Group _in-game_, so that you can play with othe
 :two: In the top right where it says ‘enter commander name’, type: **Evil Tactician**
 :three: Click on Evil Tactician once found and select _Request Join Group_.`;
 
-  public static MSG_FAIL = `Unfortunately, something went wrong during your application.
+  public static MSG_FAIL = (x: Discord.User): string => `${x}. Unfortunately, something went wrong during your application.
 
 Please contact someone in IP3X Leadership on Discord, so we can try and resolve this for you.`;
 
