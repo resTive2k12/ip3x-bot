@@ -52,7 +52,7 @@ export interface MissionEntry {
   lastSync: number;
 }
 
-export type Notification = 'Yes' | 'No' | 'Ignore' | 'Bot' | 'Envoy' | 'Not applied';
+export type Notification = 'Yes' | 'No' | 'Ignore' | 'Bot' | 'Envoy' | 'Not applied' | 'Left the server' | 'Unknown';
 export type NotChecked = 'Not checked';
 export type Validation = Notification | NotChecked;
 export type ApplicationStep = 'Error' | 'Started' | 'In Progress' | 'Finished' | 'Ignore' | 'Cancelled' | 'Rejected' | 'Applied';
