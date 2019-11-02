@@ -27,44 +27,48 @@ export abstract class AbstractCommand implements Command {
   }
 
   public async matches(message: Discord.Message): Promise<boolean> {
-    if (message.system) {
-      return false;
-    }
-    const args = this.parseMessageIntoParameters(message);
-
-    if (this.requiresGuild && !message.member) {
-      //console.debug(`${this.constructor.name} needs to be sent from a server. Direct messages are not allowed.`);
-      return false;
-    }
-
-    if (message.author && message.author.bot && !this.botAllowed) {
-      //console.debug(`${this.constructor.name} does not work with bot messages.`);
-      return false;
-    }
-
-    const prefix = this.requiresPrefix ? this.client.bot.config.prefix : '';
-
-    let cmd = args[0];
-    if (!cmd) return false;
-    const botMention = cmd.match(/^<@!?(\d+)>$/) || [];
-    const botIsMentioned = botMention.length != 0 && botMention[1] == this.client.user.id;
-
-    if (this.requiresBotMention && !botIsMentioned) {
-      return false;
-    }
-
-    if (botIsMentioned) {
-      cmd = args[1];
-    }
-
-    const commandIdentified = cmd === prefix + this.command || !!this.aliases.find(alias => cmd === prefix + alias);
-
-    if (commandIdentified) {
-
-      if (this.requiresAdminAccess && message.author && !(await this.isAdmin(message.member))) {
-        message.reply(`you are not allowed to use the command '${this.command}'.`).catch(console.log);
+    let commandIdentified = false;
+    try {
+      if (message.system) {
         return false;
       }
+      const args = this.parseMessageIntoParameters(message);
+
+      if (this.requiresGuild && (!message.member || this.client.bot.config.sheets.members.guildId !== message.member.guild.id)) {
+        //console.debug(`${this.constructor.name} needs to be sent from a server. Direct messages are not allowed.`);
+        return false;
+      }
+
+      if (message.author && message.author.bot && !this.botAllowed) {
+        //console.debug(`${this.constructor.name} does not work with bot messages.`);
+        return false;
+      }
+
+      const prefix = this.requiresPrefix ? this.client.bot.config.prefix : '';
+
+      let cmd = args[0];
+      if (!cmd) return false;
+      const botMention = cmd.match(/^<@!?(\d+)>$/) || [];
+      const botIsMentioned = botMention.length != 0 && botMention[1] == this.client.user.id;
+
+      if (this.requiresBotMention && !botIsMentioned) {
+        return false;
+      }
+
+      if (botIsMentioned) {
+        cmd = args[1];
+      }
+
+      commandIdentified = cmd === prefix + this.command || !!this.aliases.find(alias => cmd === prefix + alias);
+
+      if (commandIdentified) {
+        if (this.requiresAdminAccess && message.author && !(await this.isAdmin(message.member))) {
+          message.reply(`you are not allowed to use the command '${this.command}'.`).catch(console.log);
+          return false;
+        }
+      }
+    } catch (error) {
+      commandIdentified = false;
     }
 
     return commandIdentified;
