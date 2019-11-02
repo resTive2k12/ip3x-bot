@@ -117,6 +117,19 @@ export class Join extends AbstractCommand {
                   return user;
                 })
                 .then(user => {
+                  this.client.db.fetch(this.client.bot.config.sheets.members.guildId).then(entry => {
+                    if (entry.notificationChannels && entry.notificationChannels.length > 0) {
+                      entry.notificationChannels.forEach(nc => {
+                        const channel = this.client.channels.get(nc.id);
+                        if (channel) {
+                          (channel as Discord.TextChannel).send(`@here: the user ${discordUser.username} as just finished his application.`);
+                        }
+                      });
+                    }
+                  });
+                  return user;
+                })
+                .then(user => {
                   return this.client.bot.userService.updateOrInsert(user);
                 })
                 .then(user => {
