@@ -52,22 +52,27 @@ export class MemberController extends AbstractController {
   }
 
   async onGuildMemberRemove(member: Discord.GuildMember): Promise<void> {
-    this.client.bot.userService.fetch(member.id).then(user => {
-      user.leftAt = new Date();
-      user.comment = '!!!Has left discord!!! ' + user.comment;
-      console.log('left:', user);
-      GoogleSheets.updateUser(this.client.bot.config, this.client.bot.config.sheets.members, user);
-      this.client.db.fetch(member.guild.id).then(entry => {
-        if (entry.notificationChannels && entry.notificationChannels.length > 0) {
-          entry.notificationChannels.forEach(nc => {
-            const channel = this.client.channels.get(nc.id);
-            if (channel) {
-              (channel as Discord.TextChannel).send(`@here: the user ${member.nickname || member.user.username} has left discord.`);
-            }
-          });
-        }
-      });
-    }).catch(reason => console.log('User load error', reason));
+    this.client.bot.userService
+      .fetch(member.id)
+      .then(user => {
+        user.leftAt = new Date();
+        user.comment = '!!!Has left discord!!! ' + user.comment;
+        user.onInara = 'Left the server';
+        user.inSquadron = 'Left the server';
+        user.applicationStep = 'Ignore';
+        user.notified = 'Ignore';
+        GoogleSheets.updateUser(this.client.bot.config, this.client.bot.config.sheets.members, user);
+        this.client.db.fetch(member.guild.id).then(entry => {
+          if (entry.notificationChannels && entry.notificationChannels.length > 0) {
+            entry.notificationChannels.forEach(nc => {
+              const channel = this.client.channels.get(nc.id);
+              if (channel) {
+                (channel as Discord.TextChannel).send(`@here: the user ${member.nickname || member.user.username} has left discord.`);
+              }
+            });
+          }
+        });
+      })
+      .catch(reason => console.log('User load error', reason));
   }
-
 }

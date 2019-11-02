@@ -51,7 +51,6 @@ export class UserSync extends AbstractCommand {
     let knownSpecialUserCount = 0;
     let knownNotAppliedCount = 0;
     let knownBotUserCount = 0;
-    let ignoredUserCount = 0;
     let unknownUserCount = 0;
     let newAcceptedUserCount = 0;
     let newDelayedUserCount = 0;
@@ -124,9 +123,6 @@ export class UserSync extends AbstractCommand {
             } else if (this.isSpecial(user)) {
               //console.log(`${user.name} is special...`);
               knownSpecialUserCount += 1;
-            } else if (this.isIgnored(user)) {
-              //console.log(`${user.name} is ignored...`);
-              ignoredUserCount += 1;
             } else {
               //console.log(`${user.name} is unknown...`);
               unknownUserCount += 1;
@@ -195,12 +191,7 @@ export class UserSync extends AbstractCommand {
                 value: `There are **${knownNotAccteptedUserCount}** users who have not been accepted.`
               });
             }
-            if (ignoredUserCount > 0 || knownBotUserCount > 0) {
-              embed.fields.push({
-                name: '__Ignored or Bot users__',
-                value: `There are **${ignoredUserCount}** __ignored__ users and **${knownBotUserCount}** users identified as __bots__.`
-              });
-            }
+
             if (knownNotAppliedCount > 0) {
               embed.fields.push({
                 name: '__Users how have not applied__',
@@ -240,17 +231,13 @@ export class UserSync extends AbstractCommand {
   }
 
   private isNotAccepted(user: User): boolean {
-    let accepted = user.inSquadron === 'No';
-    accepted = accepted && user.onInara === 'No';
-    return accepted;
+    let notAccpeted = user.inSquadron === 'No';
+    notAccpeted = notAccpeted || user.onInara === 'No';
+    return notAccpeted;
   }
 
   private isSpecial(user: User): boolean {
-    return (user.onInara !== 'Not checked' && user.onInara !== 'Yes') || (user.inSquadron !== 'Not checked' && user.inSquadron !== 'Yes');
-  }
-
-  private isIgnored(user: User): boolean {
-    return user.onInara == 'Ignore' || user.inSquadron == 'Ignore';
+    return user.onInara === 'Envoy' && user.inSquadron === 'Envoy';
   }
 
   private isBot(user: User): boolean {
@@ -350,7 +337,7 @@ It is useful to join our Private Group _in-game_, so that you can play with othe
 
 Please contact someone in IP3X Leadership on Discord, so we can try and resolve this for you.`;
 
-  public static MSG_REJECTED = `Unfortunately, your did not finish the application within 3 days.
+  public static MSG_REJECTED = `Unfortunately, you did not finish the application within 3 days.
 
 Please contact someone in IP3X Leadership on Discord, so we can try and resolve this for you.
 
